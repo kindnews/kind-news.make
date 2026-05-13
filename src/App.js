@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // ─── BRIEF VARIATIONS (rotates by day of week) ───────────────────────────────
 
@@ -384,7 +384,7 @@ export default function Kind() {
     setAiLoading(false);
   }, []);
 
-  useEffect(() => { if (tab === "feed") loadAI(); }, [tab]);
+  useEffect(() => { if (tab === "feed") loadAI(); }, [tab, loadAI]);
 
   const handleLoadMore = () => {
     if (extraPool.length === 0) return;
