@@ -1,780 +1,769 @@
 import { useState, useEffect, useCallback } from "react";
 
-// ─── BRIEF VARIATIONS (rotates by day of week) ───────────────────────────────
-
 const BRIEF_VARIANTS = [
-  {
-    headline: "Lo que pasó hoy, sin filtros ni alarma",
-    intro: "Buenos días. Hubo cosas buenas, hubo cosas difíciles. Como siempre. Acá te las contamos con contexto y sin el loop de angustia al que te acostumbraron otros medios.",
-    closing: "Estar informado no significa estar angustiado. Significa entender mejor el mundo en el que vivís."
-  },
-  {
-    headline: "El mundo no para. Tampoco vos.",
-    intro: "Arrancar el día con buena información es una decisión. Acá está lo más importante de las últimas horas, ordenado para que puedas leerlo en paz.",
-    closing: "Saber lo que pasa no te obliga a cargarlo todo. Con entender ya es suficiente."
-  },
-  {
-    headline: "Mucho ruido afuera. Acá, solo lo que importa.",
-    intro: "Hay días en que las noticias parecen una catarata. Hoy elegimos lo relevante, lo pusimos en contexto y te lo dejamos acá. Sin clickbait, sin catástrofe.",
-    closing: "El mundo es complejo. Lo simple es cómo te lo contamos."
-  },
-  {
-    headline: "Noticias que merecen tu atención",
-    intro: "No todo lo que hace ruido importa, y no todo lo que importa hace ruido. Este brief intenta equilibrar eso. Lo urgente y lo significativo, juntos.",
-    closing: "Gracias por leer con calma. Es un acto más político de lo que parece."
-  },
-  {
-    headline: "Un día más, un mundo entero",
-    intro: "Mientras dormías pasaron cosas. Algunas buenas, algunas difíciles, algunas que todavía no sabemos bien qué son. Acá el resumen honesto.",
-    closing: "No hay forma de controlar todo. Sí hay formas de entender mejor."
-  },
-  {
-    headline: "Sin dramatismo, sin ingenuidad",
-    intro: "El periodismo que te agota no es inevitable. Se puede informar bien sin alarmar, sin omitir, sin elegir solo lo que vende. Eso intentamos cada mañana.",
-    closing: "Curiosidad sin ansiedad. Eso es lo que Kind intenta ser."
-  },
-  {
-    headline: "Lo importante de hoy, con todo el contexto",
-    intro: "Cada noticia tiene historia, causa y consecuencia. Acá no te damos solo el titular: te damos el marco para que lo que leas tenga sentido.",
-    closing: "Informarse bien lleva un poco más de tiempo. Vale la pena."
-  },
+  { headline: "Lo que pasó hoy, sin filtros ni alarma", intro: "Buenos días. Hubo cosas buenas, hubo cosas difíciles. Como siempre. Acá te las contamos con contexto y sin el loop de angustia.", closing: "Estar informado no significa estar angustiado. Significa entender mejor el mundo." },
+  { headline: "El mundo no para. Tampoco vos.", intro: "Arrancar el día con buena información es una decisión. Acá está lo más importante de las últimas horas, ordenado para que puedas leerlo en paz.", closing: "Saber lo que pasa no te obliga a cargarlo todo." },
+  { headline: "Mucho ruido afuera. Acá, solo lo que importa.", intro: "Hay días en que las noticias parecen una catarata. Hoy elegimos lo relevante y te lo dejamos acá. Sin clickbait, sin catástrofe.", closing: "El mundo es complejo. Lo simple es cómo te lo contamos." },
+  { headline: "Noticias que merecen tu atención", intro: "No todo lo que hace ruido importa, y no todo lo que importa hace ruido. Este brief intenta equilibrar eso.", closing: "Gracias por leer con calma. Es un acto más político de lo que parece." },
+  { headline: "Un día más, un mundo entero", intro: "Mientras dormías pasaron cosas. Algunas buenas, algunas difíciles. Acá el resumen honesto.", closing: "No hay forma de controlar todo. Sí hay formas de entender mejor." },
+  { headline: "Sin dramatismo, sin ingenuidad", intro: "El periodismo que te agota no es inevitable. Se puede informar bien sin alarmar, sin omitir.", closing: "Curiosidad sin ansiedad. Eso es lo que Kind intenta ser." },
+  { headline: "Lo importante de hoy, con todo el contexto", intro: "Cada noticia tiene historia, causa y consecuencia. Acá no te damos solo el titular: te damos el marco.", closing: "Informarse bien lleva un poco más de tiempo. Vale la pena." },
 ];
 
-const BRIEF_ITEMS_POOL = [
-  { icon: "🌊", tag: "Crisis · Ambiente", text: "Las inundaciones en el sur de Brasil dejaron más de 40.000 desplazados. Es el tercer evento climático extremo en la región en lo que va del año.", hard: true },
-  { icon: "🧬", tag: "Ciencia", text: "Investigadores lograron regenerar tejido cardíaco con células madre en un ensayo clínico que podría transformar el tratamiento de enfermedades del corazón." },
-  { icon: "⚖️", tag: "Conflicto · Mundo", text: "La ONU advirtió que las negociaciones de paz en Sudán están estancadas. Más de 8 millones de personas permanecen desplazadas desde el inicio del conflicto.", hard: true },
-  { icon: "☀️", tag: "Ambiente", text: "España superó su meta de energía renovable con tres años de anticipación, generando el 58% de su electricidad con fuentes limpias." },
-  { icon: "📚", tag: "Cultura", text: "El festival literario de Buenos Aires batió su récord histórico: 80.000 visitantes, con el 40% menor de 30 años." },
-  { icon: "🤖", tag: "Tecnología", text: "Un equipo chileno desarrolló una IA que reduce de años a semanas el diagnóstico de enfermedades raras en América Latina." },
-  { icon: "📊", tag: "Economía", text: "El desempleo juvenil en LATAM supera el 20% por segundo año consecutivo, según un informe de la OIT publicado esta semana.", hard: true },
-  { icon: "🌍", tag: "Mundo", text: "40 países firmaron un fondo histórico para restaurar ecosistemas, comprometiendo recursos sin precedentes para la próxima década." },
-  { icon: "🏥", tag: "Salud", text: "La OMS aprobó una nueva vacuna contra la tuberculosis, la primera en más de un siglo, con eficacia del 73% en ensayos clínicos en África subsahariana." },
-  { icon: "🚨", tag: "Crisis · Social", text: "Un terremoto de magnitud 6.8 afectó la costa central de Perú. Las autoridades informan daños materiales significativos y continúan los relevamientos.", hard: true },
+const BRIEF_ITEMS = [
+  { icon: "🌊", tag: "Crisis · Ambiente", text: "Las inundaciones en el sur de Brasil dejaron más de 40.000 desplazados. Tercer evento climático extremo del año.", hard: true },
+  { icon: "🧬", tag: "Ciencia", text: "Investigadores lograron regenerar tejido cardíaco con células madre en un ensayo clínico histórico." },
+  { icon: "⚖️", tag: "Conflicto · Mundo", text: "La ONU advirtió que las negociaciones de paz en Sudán están estancadas. 8 millones de desplazados.", hard: true },
+  { icon: "☀️", tag: "Ambiente", text: "España superó su meta de energía renovable con tres años de anticipación." },
+];
+
+const CATEGORIES = [
+  { id: "all", label: "Todo" },
+  { id: "Mundo", label: "Mundo" },
+  { id: "Ciencia", label: "Ciencia" },
+  { id: "Ambiente", label: "Ambiente" },
+  { id: "Tecnología", label: "Tecnología" },
+  { id: "Salud", label: "Salud" },
+  { id: "Economía", label: "Economía" },
+];
+
+const SECTIONS = [
+  { id: "feed", label: "Feed", icon: "📰", desc: "Todas las noticias del día" },
+  { id: "brief", label: "Brief", icon: "☀️", desc: "El resumen matutino" },
+  { id: "intereses", label: "Tus intereses", icon: "🎛️", desc: "Personalizá tu feed" },
+  { id: "redes", label: "Destacado en redes", icon: "📱", desc: "Lo más compartido hoy" },
+  { id: "nosotros", label: "Nosotros", icon: "✦", desc: "Qué es Kind" },
+];
+
+const WELLNESS_TIPS = [
+  { icon: "💧", title: "Hidratación", msg: "¿Tomaste agua en la última hora? Un vaso ahora hace la diferencia.", color: "#EBF5FB", accent: "#2980B9" },
+  { icon: "🚶", title: "Movilidad", msg: "Levantate 2 minutos. Estirá el cuello y los hombros. Tu cuerpo te lo agradece.", color: "#EBF5EF", accent: "#27AE60" },
+  { icon: "🧘", title: "Respiración", msg: "Inhala 4 segundos, sostén 4, exhala 4. Repetí 3 veces.", color: "#F3EBF5", accent: "#8E44AD" },
+  { icon: "🎵", title: "Música", msg: "Una canción que te guste puede cambiar el humor en segundos.", color: "#FDF5E8", accent: "#E67E22" },
+  { icon: "👁️", title: "Descanso visual", msg: "Mirá algo lejano por 20 segundos. Tus ojos necesitan ese descanso.", color: "#F5EBEB", accent: "#C0392B" },
+  { icon: "🌿", title: "Pausa consciente", msg: "Antes de seguir leyendo, ¿cómo estás? Tomá un momento para notarlo.", color: "#EBF5EF", accent: "#1B5E3B" },
+  { icon: "😊", title: "Gratitud", msg: "Pensá en una cosa buena que pasó hoy, aunque sea pequeña.", color: "#FBF8E8", accent: "#B7950B" },
+  { icon: "🤸", title: "Estiramiento", msg: "Rodá los hombros hacia atrás 5 veces. Tu espalda te lo agradece.", color: "#EBF0F5", accent: "#2C3E50" },
 ];
 
 const ALL_NEWS = [
-  { id: 1, portal: "BBC Mundo", topic: "Crisis", title: "Inundaciones en Brasil dejan 40.000 desplazados en tres provincias", summary: "Es el tercer evento climático extremo en la región en lo que va de 2026. Las autoridades declararon emergencia nacional y activaron planes de evacuación.", tone: "hard", time: "15 min", img: "🌊", photo: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=400&h=220&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
-  { id: 2, portal: "El País", topic: "Mundo", title: "ONU: las negociaciones de paz en Sudán están estancadas", summary: "Más de 8 millones de personas llevan desplazadas desde el inicio del conflicto. Los mediadores internacionales no logran sentar a las partes en la misma mesa.", tone: "hard", time: "45 min", img: "⚖️", photo: "https://images.unsplash.com/photo-1526470498-9ae73c665de8?w=400&h=220&fit=crop", read: 5, url: "https://www.elpais.com" },
-  { id: 3, portal: "BBC Mundo", topic: "Ciencia", title: "Células madre cardíacas: el ensayo que puede cambiar la medicina", summary: "Un equipo internacional publicó resultados que podrían transformar el tratamiento de enfermedades del corazón para millones de personas.", tone: "positive", time: "1h", img: "🧬", photo: "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=400&h=220&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
-  { id: 4, portal: "Infobae", topic: "Economía", title: "El desempleo juvenil en LATAM supera el 20% por segundo año consecutivo", summary: "El informe de la OIT revela que la recuperación post-pandemia no llegó al segmento más joven de la población activa en la región.", tone: "hard", time: "2h", img: "📊", photo: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&h=220&fit=crop", read: 5, url: "https://www.infobae.com" },
-  { id: 5, portal: "El País", topic: "Ambiente", title: "España supera su meta renovable con tres años de anticipación", summary: "El país generó el 58% de su electricidad con fuentes limpias durante el primer trimestre, superando las proyecciones más optimistas.", tone: "positive", time: "2h", img: "☀️", photo: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=400&h=220&fit=crop", read: 3, url: "https://www.elpais.com" },
-  { id: 6, portal: "BBC Mundo", topic: "Tecnología", title: "La IA chilena que diagnostica lo que los médicos no pueden ver", summary: "El sistema reduce de años a semanas el diagnóstico de enfermedades raras, con impacto directo en comunidades con poco acceso a especialistas.", tone: "positive", time: "3h", img: "🤖", photo: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=220&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
-  { id: 7, portal: "La Nación", topic: "Sociedad", title: "Crece el burnout docente: una crisis silenciosa en las escuelas", summary: "Sindicatos y especialistas coinciden en que las condiciones laborales del sector educativo se deterioraron en los últimos tres años.", tone: "hard", time: "4h", img: "🏫", photo: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=220&fit=crop", read: 6, url: "https://www.lanacion.com.ar" },
-  { id: 8, portal: "La Nación", topic: "Cultura", title: "80.000 personas y récord histórico en la Feria del Libro porteña", summary: "La edición 2026 superó todas las marcas anteriores. El 40% de los visitantes tenía menos de 30 años.", tone: "positive", time: "4h", img: "📚", photo: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=220&fit=crop", read: 3, url: "https://www.lanacion.com.ar" },
-  { id: 9, portal: "El País", topic: "Mundo", title: "40 países firman fondo histórico para restaurar ecosistemas", summary: "El acuerdo compromete recursos sin precedentes para reforestar áreas críticas del planeta en la próxima década.", tone: "positive", time: "5h", img: "🌳", photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=220&fit=crop", read: 4, url: "https://www.elpais.com" },
-  { id: 10, portal: "DW Español", topic: "Salud", title: "OMS aprueba la primera vacuna contra la tuberculosis en 100 años", summary: "La vacuna mostró una eficacia del 73% en ensayos clínicos realizados en África subsahariana, donde la enfermedad sigue siendo una de las principales causas de muerte.", tone: "positive", time: "6h", img: "💉", photo: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=220&fit=crop", read: 5, url: "https://www.dw.com/es" },
-  { id: 11, portal: "Infobae", topic: "Crisis", title: "Terremoto de 6.8 sacude la costa central de Perú", summary: "Las autoridades informan daños materiales significativos en tres provincias costeras. No se reportan víctimas fatales pero continúan los relevamientos.", tone: "hard", time: "6h", img: "🚨", photo: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=400&h=220&fit=crop", read: 4, url: "https://www.infobae.com" },
-  { id: 12, portal: "BBC Mundo", topic: "Sociedad", title: "Un estudio revela que el tiempo de lectura aumentó un 18% en jóvenes de 18 a 25 años", summary: "Los investigadores atribuyen el cambio al auge de los newsletters y los libros en formato digital. El fenómeno es más marcado en América Latina.", tone: "positive", time: "7h", img: "📖", photo: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&h=220&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
-  { id: 13, portal: "El País", topic: "Economía", title: "El FMI advierte sobre el riesgo de recesión en tres economías europeas", summary: "El organismo bajó sus proyecciones de crecimiento para Alemania, Francia e Italia, citando la persistencia de altos costos energéticos y la caída del consumo interno.", tone: "hard", time: "8h", img: "📉", photo: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=220&fit=crop", read: 5, url: "https://www.elpais.com" },
-  { id: 14, portal: "La Tercera", topic: "Tecnología", title: "Chile lidera un proyecto regional para llevar internet satelital a comunidades rurales", summary: "El programa, financiado por un consorcio de países latinoamericanos, busca conectar a más de 2 millones de personas en zonas sin cobertura para 2028.", tone: "positive", time: "9h", img: "🛰️", photo: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=400&h=220&fit=crop", read: 4, url: "https://www.latercera.com" },
-  { id: 15, portal: "DW Español", topic: "Ambiente", title: "El Ártico registra su verano más cálido desde que hay registros", summary: "Los científicos alertan que el derretimiento acelerado del permafrost podría liberar reservas de metano que amplifiquen el cambio climático más allá de los modelos actuales.", tone: "hard", time: "10h", img: "🧊", photo: "https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=400&h=220&fit=crop", read: 6, url: "https://www.dw.com/es" },
-  { id: 16, portal: "Clarín", topic: "Cultura", title: "Un director argentino gana el premio a mejor documental en Sundance", summary: "La película, que retrata la migración patagónica a través de tres generaciones de una misma familia, fue aclamada por la crítica internacional.", tone: "positive", time: "11h", img: "🎬", photo: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=400&h=220&fit=crop", read: 3, url: "https://www.clarin.com" },
-  { id: 17, portal: "BBC Mundo", topic: "Sociedad", title: "Crisis de vivienda en ciudades latinoamericanas: el alquiler subió un 40% en dos años", summary: "Buenos Aires, Ciudad de México y Bogotá encabezan el ranking de ciudades donde el acceso a la vivienda se deterioró más rápido desde 2024.", tone: "hard", time: "12h", img: "🏙️", photo: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=400&h=220&fit=crop", read: 6, url: "https://www.bbc.com/mundo" },
-  { id: 18, portal: "El Universal", topic: "Ciencia", title: "México lanza su primer programa nacional de medicina de precisión", summary: "El proyecto usará secuenciación genómica para adaptar tratamientos oncológicos a la genética de cada paciente, con cobertura pública prevista para 2027.", tone: "positive", time: "13h", img: "🔬", photo: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&h=220&fit=crop", read: 5, url: "https://www.eluniversal.com.mx" },
-  { id: 19, portal: "Infobae", topic: "Mundo", title: "Tensiones en el estrecho de Taiwán: China realizó ejercicios militares no anunciados", summary: "El movimiento fue interpretado como una señal de presión hacia Washington tras las últimas declaraciones del Congreso estadounidense sobre ventas de armas a Taipéi.", tone: "hard", time: "14h", img: "⚠️", photo: "https://images.unsplash.com/photo-1569336415962-a4bd9f69c8bf?w=400&h=220&fit=crop", read: 5, url: "https://www.infobae.com" },
-  { id: 20, portal: "El País", topic: "Educación", title: "Finlandia comparte su modelo educativo con 12 países latinoamericanos", summary: "La cooperación incluye formación docente, rediseño curricular y evaluación continua. Uruguay y Colombia serán los primeros en implementarlo.", tone: "positive", time: "15h", img: "🎓", photo: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=220&fit=crop", read: 4, url: "https://www.elpais.com" },
+  { id: 1, portal: "BBC Mundo", topic: "Mundo", title: "Inundaciones en Brasil dejan 40.000 desplazados en tres provincias", summary: "Es el tercer evento climático extremo en la región en lo que va de 2026. Las autoridades declararon emergencia nacional.", tone: "hard", time: "15 min", photo: "https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=600&h=360&fit=crop", read: 4, url: "https://www.bbc.com/mundo", featured: true },
+  { id: 2, portal: "El País", topic: "Mundo", title: "ONU: las negociaciones de paz en Sudán están estancadas", summary: "Más de 8 millones de personas llevan desplazadas desde el inicio del conflicto.", tone: "hard", time: "45 min", photo: "https://images.unsplash.com/photo-1526470498-9ae73c665de8?w=600&h=360&fit=crop", read: 5, url: "https://www.elpais.com" },
+  { id: 3, portal: "BBC Mundo", topic: "Ciencia", title: "Células madre cardíacas: el ensayo que puede cambiar la medicina", summary: "Un equipo internacional publicó resultados que podrían transformar el tratamiento de enfermedades del corazón.", tone: "positive", time: "1h", photo: "https://images.unsplash.com/photo-1579154204601-01588f351e67?w=600&h=360&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
+  { id: 4, portal: "Infobae", topic: "Economía", title: "El desempleo juvenil en LATAM supera el 20% por segundo año consecutivo", summary: "El informe de la OIT revela que la recuperación post-pandemia no llegó al segmento más joven.", tone: "hard", time: "2h", photo: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=360&fit=crop", read: 5, url: "https://www.infobae.com" },
+  { id: 5, portal: "El País", topic: "Ambiente", title: "España supera su meta renovable con tres años de anticipación", summary: "El país generó el 58% de su electricidad con fuentes limpias durante el primer trimestre.", tone: "positive", time: "2h", photo: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=600&h=360&fit=crop", read: 3, url: "https://www.elpais.com" },
+  { id: 6, portal: "BBC Mundo", topic: "Tecnología", title: "La IA chilena que diagnostica lo que los médicos no pueden ver", summary: "El sistema reduce de años a semanas el diagnóstico de enfermedades raras.", tone: "positive", time: "3h", photo: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=360&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
+  { id: 7, portal: "La Nación", topic: "Salud", title: "Crece el burnout docente: una crisis silenciosa en las escuelas", summary: "Sindicatos y especialistas coinciden en que las condiciones laborales del sector educativo se deterioraron.", tone: "hard", time: "4h", photo: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=600&h=360&fit=crop", read: 6, url: "https://www.lanacion.com.ar" },
+  { id: 8, portal: "La Nación", topic: "Mundo", title: "80.000 personas y récord histórico en la Feria del Libro porteña", summary: "La edición 2026 superó todas las marcas anteriores. El 40% de los visitantes tenía menos de 30 años.", tone: "positive", time: "4h", photo: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&h=360&fit=crop", read: 3, url: "https://www.lanacion.com.ar" },
+  { id: 9, portal: "El País", topic: "Ambiente", title: "40 países firman fondo histórico para restaurar ecosistemas", summary: "El acuerdo compromete recursos sin precedentes para reforestar áreas críticas del planeta.", tone: "positive", time: "5h", photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&h=360&fit=crop", read: 4, url: "https://www.elpais.com" },
+  { id: 10, portal: "DW Español", topic: "Salud", title: "OMS aprueba la primera vacuna contra la tuberculosis en 100 años", summary: "La vacuna mostró una eficacia del 73% en ensayos clínicos en África subsahariana.", tone: "positive", time: "6h", photo: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&h=360&fit=crop", read: 5, url: "https://www.dw.com/es" },
+  { id: 11, portal: "Infobae", topic: "Mundo", title: "Terremoto de 6.8 sacude la costa central de Perú", summary: "Las autoridades informan daños materiales. No se reportan víctimas fatales pero continúan los relevamientos.", tone: "hard", time: "6h", photo: "https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=600&h=360&fit=crop", read: 4, url: "https://www.infobae.com" },
+  { id: 12, portal: "BBC Mundo", topic: "Ciencia", title: "Estudio: el tiempo de lectura aumentó un 18% en jóvenes de 18 a 25 años", summary: "Los investigadores atribuyen el cambio al auge de newsletters y libros digitales.", tone: "positive", time: "7h", photo: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=600&h=360&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
+  { id: 13, portal: "El País", topic: "Economía", title: "El FMI advierte sobre el riesgo de recesión en tres economías europeas", summary: "El organismo bajó sus proyecciones para Alemania, Francia e Italia.", tone: "hard", time: "8h", photo: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=360&fit=crop", read: 5, url: "https://www.elpais.com" },
+  { id: 14, portal: "La Tercera", topic: "Tecnología", title: "Chile lidera proyecto para llevar internet satelital a comunidades rurales", summary: "El programa busca conectar a más de 2 millones de personas en zonas sin cobertura para 2028.", tone: "positive", time: "9h", photo: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&h=360&fit=crop", read: 4, url: "https://www.latercera.com" },
+  { id: 15, portal: "DW Español", topic: "Ambiente", title: "El Ártico registra su verano más cálido desde que hay registros", summary: "Los científicos alertan que el derretimiento del permafrost podría amplificar el cambio climático.", tone: "hard", time: "10h", photo: "https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=600&h=360&fit=crop", read: 6, url: "https://www.dw.com/es" },
+  { id: 16, portal: "Clarín", topic: "Mundo", title: "Un director argentino gana el premio a mejor documental en Sundance", summary: "La película retrata la migración patagónica a través de tres generaciones.", tone: "positive", time: "11h", photo: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=600&h=360&fit=crop", read: 3, url: "https://www.clarin.com" },
+  { id: 17, portal: "BBC Mundo", topic: "Economía", title: "Crisis de vivienda: el alquiler subió un 40% en ciudades latinoamericanas", summary: "Buenos Aires, Ciudad de México y Bogotá encabezan el ranking de ciudades más afectadas.", tone: "hard", time: "12h", photo: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=360&fit=crop", read: 6, url: "https://www.bbc.com/mundo" },
+  { id: 18, portal: "El Universal", topic: "Ciencia", title: "México lanza su primer programa nacional de medicina de precisión", summary: "El proyecto usará secuenciación genómica para adaptar tratamientos oncológicos a cada paciente.", tone: "positive", time: "13h", photo: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=600&h=360&fit=crop", read: 5, url: "https://www.eluniversal.com.mx" },
+  { id: 19, portal: "Infobae", topic: "Mundo", title: "China realizó ejercicios militares no anunciados en el estrecho de Taiwán", summary: "El movimiento fue interpretado como una señal de presión hacia Washington.", tone: "hard", time: "14h", photo: "https://images.unsplash.com/photo-1569336415962-a4bd9f69c8bf?w=600&h=360&fit=crop", read: 5, url: "https://www.infobae.com" },
+  { id: 20, portal: "El País", topic: "Mundo", title: "Finlandia comparte su modelo educativo con 12 países latinoamericanos", summary: "La cooperación incluye formación docente, rediseño curricular y evaluación continua.", tone: "positive", time: "15h", photo: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&h=360&fit=crop", read: 4, url: "https://www.elpais.com" },
 ];
 
-// Extra news to load on scroll
-const EXTRA_NEWS_POOL = [
-  { id: 101, portal: "DW Español", topic: "Tecnología", title: "La Unión Europea aprueba el primer marco regulatorio global para la IA generativa", summary: "Las nuevas reglas obligan a los desarrolladores a documentar los datos de entrenamiento y establecen límites al uso de IA en decisiones judiciales y crediticias.", tone: "positive", time: "16h", img: "🤖", photo: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=400&h=220&fit=crop", read: 5, url: "https://www.dw.com/es" },
-  { id: 102, portal: "BBC Mundo", topic: "Salud", title: "Un nuevo antidepresivo de acción rápida muestra resultados en 48 horas", summary: "El fármaco, desarrollado por un laboratorio suizo, actúa sobre receptores distintos a los ISRS convencionales y podría transformar el tratamiento de la depresión severa.", tone: "positive", time: "17h", img: "💊", photo: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&h=220&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
-  { id: 103, portal: "La Nación", topic: "Crisis", title: "Sequía histórica en el norte de Argentina compromete la cosecha de soja", summary: "Las proyecciones del INTA indican pérdidas de hasta el 35% en las provincias de Santiago del Estero y Chaco, lo que impactaría en las reservas de divisas.", tone: "hard", time: "18h", img: "🌾", photo: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=400&h=220&fit=crop", read: 5, url: "https://www.lanacion.com.ar" },
-  { id: 104, portal: "El País", topic: "Sociedad", title: "España bate su récord de turismo pero el debate sobre la gentrificación se intensifica", summary: "Con 94 millones de visitantes en 2025, ciudades como Barcelona y San Sebastián enfrentan presión vecinal creciente por el impacto en el acceso a la vivienda.", tone: "hard", time: "19h", img: "✈️", photo: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&h=220&fit=crop", read: 5, url: "https://www.elpais.com" },
-  { id: 105, portal: "Infobae", topic: "Ciencia", title: "Detectan agua líquida bajo la superficie de la luna Europa de Júpiter", summary: "El hallazgo de la sonda Clipper refuerza la hipótesis de que Europa podría albergar condiciones habitables en su océano subsuperficial.", tone: "positive", time: "20h", img: "🪐", photo: "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=400&h=220&fit=crop", read: 4, url: "https://www.infobae.com" },
+const EXTRA_NEWS = [
+  { id: 101, portal: "DW Español", topic: "Tecnología", title: "La UE aprueba el primer marco regulatorio global para la IA generativa", summary: "Las nuevas reglas obligan a documentar los datos de entrenamiento.", tone: "positive", time: "16h", photo: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&h=360&fit=crop", read: 5, url: "https://www.dw.com/es" },
+  { id: 102, portal: "BBC Mundo", topic: "Salud", title: "Nuevo antidepresivo de acción rápida muestra resultados en 48 horas", summary: "El fármaco podría transformar el tratamiento de la depresión severa.", tone: "positive", time: "17h", photo: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&h=360&fit=crop", read: 4, url: "https://www.bbc.com/mundo" },
+  { id: 103, portal: "La Nación", topic: "Economía", title: "Sequía histórica en el norte de Argentina compromete la cosecha de soja", summary: "Las proyecciones del INTA indican pérdidas de hasta el 35% en dos provincias.", tone: "hard", time: "18h", photo: "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=360&fit=crop", read: 5, url: "https://www.lanacion.com.ar" },
 ];
 
-const WELLNESS = [
-  { icon: "💧", title: "Hidratación", msg: "¿Tomaste agua en la última hora? Un vaso ahora hace la diferencia." },
-  { icon: "🚶", title: "Movimiento", msg: "Levantate 2 minutos. Estirá el cuello y los hombros." },
-  { icon: "🧘", title: "Respiración", msg: "Inhala 4 segundos, sostén 4, exhala 4. Repetí 3 veces." },
-  { icon: "👁️", title: "Descanso visual", msg: "Mirá algo lejano por 20 segundos. Tus ojos te lo agradecen." },
-  { icon: "🌿", title: "Pausa", msg: "Antes de seguir leyendo, ¿cómo estás? Tomá un momento." },
-];
-
-const ALL_PORTALS = ["BBC Mundo","El País","Infobae","Clarín","La Nación","DW Español","El Universal","La Tercera","France 24","EFE"];
-const ALL_TOPICS = [
-  { id: "ciencia", label: "Ciencia", icon: "🔬" },
-  { id: "tecnologia", label: "Tecnología", icon: "⚡" },
-  { id: "ambiente", label: "Ambiente", icon: "🌱" },
-  { id: "salud", label: "Salud", icon: "🌿" },
-  { id: "economia", label: "Economía", icon: "📊" },
-  { id: "mundo", label: "Mundo", icon: "🌎" },
-  { id: "cultura", label: "Cultura", icon: "🎨" },
-  { id: "sociedad", label: "Sociedad", icon: "🤝" },
-  { id: "educacion", label: "Educación", icon: "🎓" },
-  { id: "crisis", label: "Crisis", icon: "🚨" },
-];
-
-// ─── STYLES ──────────────────────────────────────────────────────────────────
+const ALL_PORTALS = ["BBC Mundo","El País","Infobae","Clarín","La Nación","DW Español","El Universal","La Tercera"];
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --ink: #141414; --ink-soft: #3a3a3a; --muted: #888; --faint: #bbb;
-    --paper: #F9F6F1; --warm: #F0EAE0; --warmer: #E8DDD0;
-    --kind-green: #2D6A4F; --kind-green-light: #52B788; --kind-green-pale: #D8F3DC;
-    --kind-amber: #C97D2A;
-    --positive: #2D6A4F; --positive-bg: #D8F3DC;
-    --hard: #8B2E2E; --hard-bg: #FDF0F0;
-    --radius: 16px; --radius-lg: 24px;
-    --shadow-sm: 0 2px 12px rgba(20,20,20,0.06);
-    --shadow: 0 4px 28px rgba(20,20,20,0.09);
+    --ink: #111; --ink-2: #333; --ink-3: #666; --muted: #999; --faint: #ccc;
+    --paper: #FAFAF8; --warm: #F5F2ED; --border: #E8E4DF; --border-light: #F0ECE7;
+    --green: #1B5E3B; --green-light: #2D9659; --green-pale: #EBF5EF;
+    --red: #7A1F1F; --red-pale: #FAEAEA;
+    --nav-h: 60px; --cat-h: 42px;
   }
   html { scroll-behavior: smooth; }
-  body { background: var(--paper); font-family: 'Outfit', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
-  .app { max-width: 440px; margin: 0 auto; min-height: 100vh; position: relative; overflow-x: hidden; }
+  body { background: var(--paper); font-family: 'DM Sans', sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
 
-  /* NAV */
-  .nav { position: sticky; top: 0; z-index: 100; background: rgba(249,246,241,0.93); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(20,20,20,0.07); padding: 0 20px; }
-  .nav-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 10px; }
-  .nav-logo { display: flex; flex-direction: column; gap: 1px; }
-  .logo-word { font-family: 'Lora', serif; font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; line-height: 1; }
-  .logo-word span { color: var(--kind-green); }
-  .logo-tagline { font-size: 9px; font-weight: 500; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
-  .nav-actions { display: flex; gap: 8px; }
-  .nav-btn { width: 36px; height: 36px; border: 1px solid var(--warmer); border-radius: 10px; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.18s; box-shadow: var(--shadow-sm); }
-  .nav-btn:hover { background: var(--warm); transform: translateY(-1px); }
-  .nav-tabs { display: flex; gap: 2px; padding-bottom: 12px; }
-  .nav-tab { flex: 1; padding: 8px 6px; border: none; background: transparent; font-family: 'Outfit', sans-serif; font-size: 11.5px; font-weight: 500; color: var(--muted); cursor: pointer; border-radius: 8px; transition: all 0.18s; }
-  .nav-tab.active { background: var(--ink); color: white; }
-  .nav-tab:not(.active):hover { background: var(--warm); color: var(--ink); }
+  /* ══ NAV ══ */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+    height: var(--nav-h);
+    background: rgba(250,250,248,0.97); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 14px;
+  }
+  .nav-burger {
+    width: 36px; height: 36px; flex-shrink: 0; background: none; border: none;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 5px; border-radius: 8px; transition: background 0.2s; padding: 0;
+  }
+  .nav-burger:hover { background: var(--warm); }
+  .hline { width: 20px; height: 1.5px; background: var(--ink); border-radius: 2px; transition: all 0.25s ease; transform-origin: center; }
+  .nav-burger.open .hline:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav-burger.open .hline:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .nav-burger.open .hline:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+  .nav-logo { font-family: 'Lora', serif; font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; cursor: pointer; flex-shrink: 0; }
+  .nav-logo span { color: var(--green); }
+  .nav-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+  .nav-tagline { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+  .nav-search { flex: 1; max-width: 360px; margin: 0 auto; position: relative; }
+  .nav-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; }
+  .nav-search input { width: 100%; height: 34px; background: var(--warm); border: 1px solid var(--border-light); border-radius: 100px; padding: 0 16px 0 36px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); outline: none; transition: all 0.2s; }
+  .nav-search input:focus { background: white; border-color: var(--green); box-shadow: 0 0 0 3px rgba(27,94,59,0.07); }
+  .nav-search input::placeholder { color: var(--muted); }
+  .nav-date { font-size: 11px; color: var(--muted); flex-shrink: 0; margin-left: auto; }
 
-  .content { padding-bottom: 40px; }
+  /* ══ CAT BAR ══ */
+  .cat-bar {
+    position: fixed; top: var(--nav-h); left: 0; right: 0; z-index: 290;
+    height: var(--cat-h);
+    background: rgba(250,250,248,0.97); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 2px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .cat-bar::-webkit-scrollbar { display: none; }
+  .cat-btn { white-space: nowrap; padding: 6px 14px; border-radius: 100px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 500; color: var(--ink-3); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+  .cat-btn:hover { background: var(--warm); color: var(--ink); }
+  .cat-btn.active { background: var(--ink); color: white; }
 
-  /* BRIEF */
-  .brief-hero { background: var(--ink); padding: 32px 24px 28px; position: relative; overflow: hidden; }
-  .brief-hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(45,106,79,0.35) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
-  .brief-hero::after { content: ''; position: absolute; bottom: -40px; left: -20px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(201,125,42,0.18) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
-  .brief-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-  .brief-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--kind-green-light); animation: pulse 2.5s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
-  .brief-date { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45); letter-spacing: 0.08em; text-transform: uppercase; }
-  .brief-edition { font-size: 11px; font-weight: 600; color: var(--kind-green-light); letter-spacing: 0.06em; text-transform: uppercase; margin-left: auto; }
-  .brief-title { font-family: 'Lora', serif; font-size: 21px; font-weight: 600; color: white; line-height: 1.35; margin-bottom: 12px; font-style: italic; }
-  .brief-intro { font-size: 13.5px; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 1.65; }
-  .brief-items { padding: 0 20px; }
-  .brief-item { display: flex; gap: 14px; padding: 17px 0; border-bottom: 1px solid rgba(20,20,20,0.07); animation: slideUp 0.5s ease forwards; opacity: 0; }
-  .brief-item:last-child { border-bottom: none; }
-  @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-  .brief-item-icon { width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-  .brief-item-icon.normal { background: var(--warm); }
-  .brief-item-icon.hard { background: #FDE8E8; }
-  .brief-item-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
-  .brief-item-tag.normal { color: var(--kind-green); }
-  .brief-item-tag.hard { color: var(--hard); }
-  .brief-item-text { font-family: 'Lora', serif; font-size: 14px; font-weight: 400; color: var(--ink-soft); line-height: 1.6; }
-  .brief-closing { margin: 4px 20px 20px; background: var(--kind-green-pale); border-radius: var(--radius); padding: 16px 18px; display: flex; gap: 10px; align-items: flex-start; }
-  .brief-closing-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-  .brief-closing-text { font-family: 'Lora', serif; font-size: 13.5px; color: var(--kind-green); line-height: 1.55; font-style: italic; }
+  /* ══ DRAWER ══ */
+  .overlay { position: fixed; inset: 0; z-index: 250; background: rgba(0,0,0,0.18); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .drawer {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 260;
+    width: 260px; background: var(--paper); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto;
+    transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .drawer-logo { font-family: 'Lora', serif; font-size: 20px; font-weight: 700; color: var(--ink); }
+  .drawer-logo span { color: var(--green); }
+  .drawer-x { width: 28px; height: 28px; background: none; border: none; cursor: pointer; font-size: 16px; color: var(--muted); border-radius: 6px; transition: background 0.15s; display: flex; align-items: center; justify-content: center; }
+  .drawer-x:hover { background: var(--warm); color: var(--ink); }
+  .drawer-lbl { padding: 14px 20px 6px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .drawer-nav { padding: 0 10px 4px; }
+  .dnav-btn { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; width: 100%; text-align: left; cursor: pointer; transition: all 0.15s; }
+  .dnav-btn:hover { background: var(--warm); }
+  .dnav-btn.active { background: var(--green); }
+  .dnav-icon { font-size: 17px; width: 24px; text-align: center; flex-shrink: 0; }
+  .dnav-info { display: flex; flex-direction: column; gap: 2px; }
+  .dnav-label { font-size: 14px; font-weight: 600; color: var(--ink-2); line-height: 1; }
+  .dnav-desc { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .dnav-btn.active .dnav-label { color: white; }
+  .dnav-btn.active .dnav-desc { color: rgba(255,255,255,0.6); }
+  .drawer-div { height: 1px; background: var(--border); margin: 8px 20px; flex-shrink: 0; }
 
-  /* AI */
-  .ai-card { margin: 16px 20px 0; background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid rgba(20,20,20,0.05); }
-  .ai-label { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
-  .ai-label-text { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .ai-label-badge { background: var(--kind-green-pale); color: var(--kind-green); font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 100px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .ai-text { font-size: 13.5px; font-weight: 400; color: var(--ink-soft); line-height: 1.65; }
-  .ai-refresh { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(20,20,20,0.06); cursor: pointer; width: fit-content; }
-  .ai-refresh-text { font-size: 11.5px; font-weight: 500; color: var(--kind-green); }
-  .spinner { width: 16px; height: 16px; border: 1.5px solid var(--warmer); border-top-color: var(--kind-green); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  /* ══ LAYOUT ══ */
+  .page { padding-top: calc(var(--nav-h) + var(--cat-h)); min-height: 100vh; }
+  .layout { max-width: 1240px; margin: 0 auto; padding: 32px 24px 60px; display: grid; grid-template-columns: 1fr 264px; gap: 32px; align-items: start; }
+
+  /* ══ SIDEBAR ══ */
+  .sidebar { position: sticky; top: calc(var(--nav-h) + var(--cat-h) + 24px); display: flex; flex-direction: column; gap: 14px; }
+
+  .wellness-card {
+    border-radius: 14px; padding: 18px;
+    transition: background 0.6s ease;
+    border: 1px solid rgba(0,0,0,0.04);
+  }
+  .wc-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--green); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .wc-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.6)} }
+  .wc-icon { font-size: 32px; margin-bottom: 10px; display: block; }
+  .wc-title { font-family: 'Lora', serif; font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .wc-msg { font-size: 12.5px; font-weight: 300; color: var(--ink-3); line-height: 1.65; margin-bottom: 12px; }
+  .wc-next { font-size: 11px; font-weight: 600; color: var(--green); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; }
+  .wc-next:hover { text-decoration: underline; }
+  .wc-dots { display: flex; gap: 4px; margin-top: 10px; }
+  .wc-dot-ind { width: 5px; height: 5px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .wc-dot-ind.active { background: var(--green); }
+
+  .thought-card { background: var(--ink); border-radius: 14px; padding: 18px; }
+  .tc-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.38); margin-bottom: 10px; }
+  .tc-text { font-family: 'Lora', serif; font-size: 14px; font-style: italic; color: rgba(255,255,255,0.88); line-height: 1.65; }
+  .tc-dash { margin-top: 10px; width: 24px; height: 1.5px; background: rgba(255,255,255,0.2); border-radius: 1px; }
+
+  .ai-sidebar-card { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+  .ai-label-row { display: flex; align-items: center; gap: 7px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .ai-badge { background: var(--green-pale); color: var(--green); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 100px; }
+  .ai-text { font-size: 12.5px; font-weight: 300; color: var(--ink-2); line-height: 1.65; }
+  .ai-refresh { display: flex; align-items: center; gap: 5px; margin-top: 8px; cursor: pointer; font-size: 11px; font-weight: 500; color: var(--green); background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; }
+  .spinner-sm { width: 12px; height: 12px; border: 1.5px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* WELLNESS */
-  .wellness-strip { background: linear-gradient(135deg, #1C3829 0%, #2D5A3D 100%); border-radius: var(--radius); padding: 16px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: transform 0.2s; position: relative; overflow: hidden; }
-  .wellness-strip::before { content: ''; position: absolute; right: -20px; top: -20px; width: 100px; height: 100px; background: radial-gradient(circle, rgba(82,183,136,0.25) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
-  .wellness-strip:hover { transform: scale(0.99); }
-  .wellness-icon { font-size: 24px; width: 46px; height: 46px; flex-shrink: 0; background: rgba(255,255,255,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-  .wellness-label { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--kind-green-light); margin-bottom: 3px; }
-  .wellness-msg { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.82); line-height: 1.45; }
+  /* ══ MAIN CONTENT ══ */
+  .main {}
 
-  /* FILTERS */
-  .filter-row { display: flex; gap: 7px; padding: 16px 20px 0; overflow-x: auto; scrollbar-width: none; }
-  .filter-row::-webkit-scrollbar { display: none; }
-  .filter-chip { white-space: nowrap; padding: 7px 14px; border-radius: 100px; border: 1.5px solid var(--warmer); background: white; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.18s; }
-  .filter-chip.active { background: var(--ink); border-color: var(--ink); color: white; }
-  .filter-chip:not(.active):hover { border-color: var(--kind-green); color: var(--kind-green); }
+  /* HERO */
+  .hero { margin-bottom: 28px; }
+  .hero-eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .live-row { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
+  .topic-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; border-radius: 100px; border: 1px solid; }
+  .topic-badge.hard { color: var(--red); border-color: var(--red); background: var(--red-pale); }
+  .topic-badge.positive { color: var(--green); border-color: var(--green); background: var(--green-pale); }
 
-  /* NEWS CARDS */
-  .feed-section-label { padding: 16px 20px 8px; display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .feed-section-label::after { content: ''; flex: 1; height: 1px; background: var(--warmer); }
-  .news-card { margin: 0 20px 10px; background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); border: 1px solid rgba(20,20,20,0.04); cursor: pointer; transition: transform 0.18s, box-shadow 0.18s; animation: slideUp 0.4s ease forwards; opacity: 0; }
-  .news-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
-  .news-card.hard-card { border-left: 3px solid #E8B4B4; }
-  .news-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .news-source { font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
-  .tone-pill { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 100px; letter-spacing: 0.04em; }
-  .tone-positive { background: var(--positive-bg); color: var(--positive); }
-  .tone-hard { background: var(--hard-bg); color: var(--hard); }
-  .news-body { display: flex; gap: 13px; align-items: flex-start; }
-  .news-thumb { width: 80px; height: 80px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 26px; background: var(--warm); overflow: hidden; position: relative; }
-  .news-thumb.hard-thumb { background: #FDE8E8; }
-  .news-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .news-card-photo { width: 100%; height: 155px; border-radius: 12px; overflow: hidden; margin-bottom: 14px; position: relative; }
-  .news-card-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; display: block; }
-  .news-card:hover .news-card-photo img { transform: scale(1.03); }
-  .photo-tone-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; }
-  .photo-tone-bar.positive { background: linear-gradient(90deg, var(--kind-green-light), transparent); }
-  .photo-tone-bar.hard { background: linear-gradient(90deg, #E88888, transparent); }
-  .news-topic { font-size: 10px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; margin-bottom: 4px; }
-  .news-topic.positive { color: var(--kind-green); }
-  .news-topic.hard { color: var(--hard); }
-  .news-title { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.42; }
-  .news-summary { font-size: 13px; font-weight: 300; color: var(--muted); line-height: 1.6; margin-top: 8px; animation: slideUp 0.3s ease forwards; }
-  .news-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(20,20,20,0.05); flex-wrap: wrap; gap: 6px; }
-  .news-time { font-size: 11px; color: var(--faint); }
-  .news-read { font-size: 11px; color: var(--faint); }
-  .news-expand { font-size: 11px; font-weight: 500; color: var(--kind-green); }
-  .news-link { font-size: 11px; font-weight: 600; color: var(--kind-amber); text-decoration: none; display: flex; align-items: center; gap: 3px; padding: 4px 10px; background: #FDF3E3; border-radius: 100px; transition: background 0.15s; }
-  .news-link:hover { background: #FAE8C8; }
+  .hero-grid { display: grid; grid-template-columns: 1fr 280px; gap: 28px; align-items: center; padding-bottom: 24px; border-bottom: 2px solid var(--ink); }
+  .hero-title { font-family: 'Lora', serif; font-size: 32px; font-weight: 700; color: var(--ink); line-height: 1.22; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .hero-summary { font-size: 15px; font-weight: 300; color: var(--ink-3); line-height: 1.72; margin-bottom: 18px; }
+  .hero-foot { display: flex; align-items: center; gap: 12px; }
+  .hero-portal { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .hero-time { font-size: 11px; color: var(--faint); }
+  .hero-link { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; background: var(--ink); color: white; font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 100px; text-decoration: none; transition: opacity 0.2s; }
+  .hero-link:hover { opacity: 0.82; }
+  .hero-img-wrap { border-radius: 10px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .hero-img-wrap img { width: 100%; height: 200px; object-fit: cover; display: block; }
 
-  /* LOAD MORE */
-  .load-more-trigger { padding: 20px; text-align: center; }
-  .load-more-btn { padding: 12px 28px; background: white; border: 1.5px solid var(--warmer); border-radius: 100px; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.18s; box-shadow: var(--shadow-sm); }
-  .load-more-btn:hover { border-color: var(--kind-green); color: var(--kind-green); }
-  .load-more-spinner { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  /* SECTION HEADER */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+  .sec-title { font-family: 'Lora', serif; font-size: 17px; font-weight: 700; color: var(--ink); }
+  .sec-right { display: flex; align-items: center; gap: 7px; }
+  .sec-count { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
+  .fchip { padding: 5px 12px; border-radius: 100px; border: 1px solid var(--border); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 11.5px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .fchip.active { background: var(--ink); border-color: var(--ink); color: white; }
+  .fchip:not(.active):hover { border-color: var(--green); color: var(--green); }
 
-  /* SUSCRIPCION */
-  .sub-screen { min-height: 100vh; display: flex; flex-direction: column; }
-  .sub-hero { background: var(--ink); padding: 48px 24px 36px; position: relative; overflow: hidden; }
-  .sub-hero::before { content: ''; position: absolute; top: -40px; right: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(45,106,79,0.4) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
-  .sub-back { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Outfit', sans-serif; padding: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 4px; }
-  .sub-back:hover { color: white; }
-  .sub-hero-label { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--kind-green-light); margin-bottom: 10px; }
-  .sub-hero-title { font-family: 'Lora', serif; font-size: 28px; font-weight: 700; color: white; line-height: 1.25; margin-bottom: 14px; }
-  .sub-hero-title em { color: var(--kind-green-light); font-style: normal; }
-  .sub-hero-sub { font-size: 13.5px; font-weight: 300; color: rgba(255,255,255,0.55); line-height: 1.65; }
-  .sub-note { margin: 20px 20px 0; background: #FDF3E3; border-radius: var(--radius); padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; border-left: 3px solid var(--kind-amber); }
-  .sub-note-icon { font-size: 16px; flex-shrink: 0; }
-  .sub-note-text { font-size: 12.5px; color: #7A5020; line-height: 1.55; }
-  .sub-section { padding: 24px 20px 0; }
-  .sub-section-title { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-  .sub-section-sub { font-size: 12.5px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
-  .portals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .portal-card { border: 1.5px solid var(--warmer); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: all 0.18s; background: white; display: flex; align-items: center; gap: 8px; }
-  .portal-card.selected { border-color: var(--kind-green); background: var(--kind-green-pale); }
-  .portal-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--warmer); flex-shrink: 0; margin-left: auto; transition: all 0.18s; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-  .portal-card.selected .portal-check { background: var(--kind-green); border-color: var(--kind-green); color: white; }
-  .portal-name { font-size: 12.5px; font-weight: 500; color: var(--ink); }
-  .topics-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-  .topic-pill { display: flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 100px; border: 1.5px solid var(--warmer); cursor: pointer; font-size: 12.5px; font-weight: 500; transition: all 0.18s; background: white; color: var(--ink); }
-  .topic-pill.selected { background: var(--ink); border-color: var(--ink); color: white; }
-  .sub-cta { margin: 28px 20px 40px; }
-  .sub-cta-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--kind-green) 0%, #1a4a35 100%); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: opacity 0.2s, transform 0.15s; box-shadow: 0 6px 20px rgba(45,106,79,0.35); }
-  .sub-cta-btn:hover { opacity: 0.92; transform: translateY(-1px); }
-  .sub-cta-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-  .sub-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--kind-green-pale); color: var(--kind-green); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
+  /* NEWS GRID */
+  .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .ncard { background: var(--paper); padding: 16px; display: flex; flex-direction: column; gap: 9px; text-decoration: none; cursor: pointer; transition: background 0.18s; animation: fadeUp 0.4s ease forwards; opacity: 0; }
+  .ncard:hover { background: white; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .ncard-img { width: 100%; height: 130px; border-radius: 7px; overflow: hidden; flex-shrink: 0; }
+  .ncard-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s; }
+  .ncard:hover .ncard-img img { transform: scale(1.04); }
+  .ncard-topic { font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .ncard-topic.hard { color: var(--red); }
+  .ncard-topic.positive { color: var(--green); }
+  .ncard-title { font-family: 'Lora', serif; font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.4; flex: 1; }
+  .ncard-foot { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--border-light); margin-top: auto; }
+  .ncard-meta { font-size: 10px; color: var(--muted); display: flex; gap: 4px; }
+  .ncard-meta b { font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ncard-link { font-size: 10.5px; font-weight: 600; color: var(--green); text-decoration: none; padding: 3px 9px; border-radius: 100px; background: var(--green-pale); transition: background 0.15s; white-space: nowrap; }
+  .ncard-link:hover { background: #d4eddc; }
 
-  /* SOCIAL */
-  .social-intro { padding: 20px 20px 0; }
-  .social-intro-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-  .social-intro-sub { font-size: 13px; font-weight: 300; color: var(--muted); line-height: 1.6; }
-  .social-cards { padding: 16px 20px 0; display: flex; flex-direction: column; gap: 14px; }
-  .social-card { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
-  .social-card-label { padding: 8px 16px; background: var(--warm); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .social-platform-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .social-preview { padding: 28px 24px; min-height: 180px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; }
-  .social-kind-logo { font-family: 'Lora', serif; font-size: 13px; font-weight: 700; position: absolute; top: 20px; left: 24px; opacity: 0.7; }
-  .social-body { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; line-height: 1.45; margin-bottom: 14px; }
-  .social-tag { font-size: 11px; font-weight: 500; opacity: 0.55; letter-spacing: 0.04em; }
-  .x-post-preview { padding: 20px 22px; background: #0a0a0a; }
-  .x-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .x-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--kind-green), var(--kind-amber)); display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-size: 14px; font-weight: 700; color: white; }
-  .x-name { font-size: 14px; font-weight: 600; color: white; }
-  .x-handle { font-size: 12px; color: #666; }
-  .x-body { font-size: 15px; color: rgba(255,255,255,0.9); line-height: 1.55; margin-bottom: 14px; }
-  .x-tag { font-size: 13px; color: #4A9EE8; }
-  .x-actions { display: flex; gap: 20px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
-  .x-action { font-size: 12px; color: #666; }
+  .load-wrap { text-align: center; padding: 24px 0 0; }
+  .load-btn { padding: 10px 28px; border-radius: 100px; border: 1px solid var(--border); background: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-3); cursor: pointer; transition: all 0.18s; box-shadow: 0 1px 8px rgba(0,0,0,0.05); }
+  .load-btn:hover { border-color: var(--green); color: var(--green); }
+  .loading-row { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--muted); }
 
-  /* ABOUT */
-  .about-hero { background: var(--ink); padding: 36px 24px 32px; position: relative; overflow: hidden; }
-  .about-hero::before { content: ''; position: absolute; bottom: -40px; right: -40px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(45,106,79,0.4) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
-  .about-label { font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--kind-green-light); margin-bottom: 12px; }
-  .about-title { font-family: 'Lora', serif; font-size: 28px; font-weight: 700; color: white; line-height: 1.25; margin-bottom: 14px; }
-  .about-title em { color: var(--kind-green-light); font-style: normal; }
-  .about-sub { font-size: 14px; font-weight: 300; color: rgba(255,255,255,0.55); line-height: 1.65; }
-  .about-body { padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
-  .about-card { background: white; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); border: 1px solid rgba(20,20,20,0.05); }
-  .about-card-icon { font-size: 24px; margin-bottom: 10px; }
-  .about-card-title { font-family: 'Lora', serif; font-size: 17px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
-  .about-card-text { font-size: 13.5px; font-weight: 300; color: var(--muted); line-height: 1.65; }
-  .about-manifesto { background: var(--kind-green); border-radius: var(--radius); padding: 24px; text-align: center; }
-  .about-manifesto-title { font-family: 'Lora', serif; font-size: 22px; font-weight: 700; color: white; font-style: italic; margin-bottom: 10px; line-height: 1.3; }
-  .about-manifesto-sub { font-size: 13px; font-weight: 300; color: rgba(255,255,255,0.65); line-height: 1.6; }
-  .about-links { display: flex; gap: 10px; padding: 0 20px 32px; }
-  .about-link { flex: 1; padding: 14px; border-radius: var(--radius); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: opacity 0.2s; }
-  .about-link:hover { opacity: 0.85; }
-  .about-link-name { font-size: 13px; font-weight: 600; color: white; }
-  .about-link-sub { font-size: 10.5px; color: rgba(255,255,255,0.45); }
+  /* SECTION SCREENS */
+  .screen { animation: fadeUp 0.4s ease forwards; opacity: 0; }
 
-  /* BOTTOM NAV */
-  .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 440px; background: rgba(249,246,241,0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(20,20,20,0.07); display: flex; padding: 10px 12px 22px; gap: 4px; z-index: 100; }
-  .bottom-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 4px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-family: 'Outfit', sans-serif; transition: background 0.18s; position: relative; }
-  .bottom-btn:hover { background: var(--warm); }
-  .bottom-btn.active { background: var(--warm); }
-  .bottom-btn-icon { font-size: 19px; }
-  .bottom-btn-label { font-size: 9.5px; font-weight: 500; color: var(--muted); }
-  .bottom-btn.active .bottom-btn-label { color: var(--kind-green); font-weight: 600; }
-  .sub-indicator { position: absolute; top: 6px; right: 10px; width: 7px; height: 7px; background: var(--kind-green); border-radius: 50%; border: 1.5px solid var(--paper); }
+  /* BRIEF SCREEN */
+  .brief-hero-panel { background: var(--ink); border-radius: 14px; padding: 28px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .brief-hero-panel::before { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(27,94,59,0.4) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
+  .bh-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+  .bh-title { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; color: white; font-style: italic; line-height: 1.35; margin-bottom: 10px; }
+  .bh-intro { font-size: 13.5px; font-weight: 300; color: rgba(255,255,255,0.6); line-height: 1.65; }
+  .brief-items { background: white; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .brief-item { display: flex; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border-light); align-items: flex-start; }
+  .brief-item:last-child { border-bottom: none; }
+  .bi-icon { width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .bi-icon.normal { background: var(--warm); }
+  .bi-icon.hard { background: var(--red-pale); }
+  .bi-tag { font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .bi-tag.normal { color: var(--green); }
+  .bi-tag.hard { color: var(--red); }
+  .bi-text { font-family: 'Lora', serif; font-size: 13.5px; color: var(--ink-2); line-height: 1.6; }
+  .brief-closing { background: var(--green-pale); border-radius: 12px; padding: 16px 18px; border-left: 3px solid var(--green); }
+  .bc-text { font-family: 'Lora', serif; font-size: 14px; font-style: italic; color: var(--green); line-height: 1.6; }
 
-  .fade-up { animation: slideUp 0.45s ease forwards; }
+  /* INTERESES SCREEN */
+  .intereses-intro { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .int-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+  .int-sub { font-size: 13px; font-weight: 300; color: var(--ink-3); line-height: 1.6; }
+  .int-note { margin-top: 12px; padding: 10px 14px; background: #FDF3E3; border-radius: 10px; font-size: 12px; color: #7A5020; line-height: 1.55; border-left: 3px solid #C97D2A; }
+  .int-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .portals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .portal-pill { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; background: white; transition: all 0.15s; }
+  .portal-pill.selected { border-color: var(--green); background: var(--green-pale); }
+  .portal-name { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  .portal-check { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: all 0.15s; }
+  .portal-pill.selected .portal-check { background: var(--green); border-color: var(--green); color: white; }
+  .topics-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .topic-tag { padding: 7px 14px; border-radius: 100px; border: 1.5px solid var(--border); background: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-2); cursor: pointer; transition: all 0.15s; }
+  .topic-tag.selected { background: var(--ink); border-color: var(--ink); color: white; }
+  .save-btn { width: 100%; padding: 14px; background: var(--green); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; }
+  .save-btn:hover { opacity: 0.88; }
+  .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .saved-badge { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--green-pale); border-radius: 10px; font-size: 13px; color: var(--green); font-weight: 500; }
+
+  /* REDES SCREEN */
+  .redes-intro { font-family: 'Lora', serif; font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .redes-sub { font-size: 13px; font-weight: 300; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .social-card { border-radius: 14px; overflow: hidden; margin-bottom: 14px; box-shadow: 0 2px 16px rgba(0,0,0,0.07); }
+  .sc-label { padding: 8px 16px; background: var(--warm); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+  .sc-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .sc-preview { padding: 24px; min-height: 160px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; }
+  .sc-kind { font-family: 'Lora', serif; font-size: 12px; font-weight: 700; position: absolute; top: 18px; left: 22px; opacity: 0.65; }
+  .sc-body { font-family: 'Lora', serif; font-size: 16px; font-weight: 600; line-height: 1.45; margin-bottom: 10px; }
+  .sc-tag { font-size: 11px; opacity: 0.5; }
+  .x-preview { padding: 18px 20px; background: #0a0a0a; }
+  .x-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .x-av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--green), #C97D2A); display: flex; align-items: center; justify-content: center; font-family: 'Lora', serif; font-size: 13px; font-weight: 700; color: white; }
+  .x-name { font-size: 13px; font-weight: 600; color: white; }
+  .x-handle { font-size: 11px; color: #666; }
+  .x-body { font-size: 14px; color: rgba(255,255,255,0.9); line-height: 1.55; margin-bottom: 10px; }
+  .x-tag { font-size: 12px; color: #4A9EE8; }
+  .x-acts { display: flex; gap: 16px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.07); }
+  .x-act { font-size: 11px; color: #666; }
+
+  /* NOSOTROS SCREEN */
+  .nos-hero { background: var(--ink); border-radius: 14px; padding: 28px; margin-bottom: 20px; position: relative; overflow: hidden; }
+  .nos-hero::before { content: ''; position: absolute; bottom: -30px; right: -30px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(27,94,59,0.45) 0%, transparent 65%); border-radius: 50%; pointer-events: none; }
+  .nh-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.38); margin-bottom: 10px; }
+  .nh-title { font-family: 'Lora', serif; font-size: 26px; font-weight: 700; color: white; line-height: 1.25; margin-bottom: 12px; }
+  .nh-title em { color: #52B788; font-style: normal; }
+  .nh-sub { font-size: 13.5px; font-weight: 300; color: rgba(255,255,255,0.55); line-height: 1.65; }
+  .nos-cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .nos-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; gap: 14px; align-items: flex-start; }
+  .nos-icon { font-size: 22px; flex-shrink: 0; }
+  .nos-ctitle { font-family: 'Lora', serif; font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+  .nos-ctext { font-size: 12.5px; font-weight: 300; color: var(--ink-3); line-height: 1.6; }
+  .nos-manif { background: var(--green); border-radius: 12px; padding: 22px; text-align: center; margin-bottom: 16px; }
+  .nos-manif-title { font-family: 'Lora', serif; font-size: 20px; font-weight: 700; color: white; font-style: italic; margin-bottom: 8px; line-height: 1.3; }
+  .nos-manif-sub { font-size: 12.5px; font-weight: 300; color: rgba(255,255,255,0.65); line-height: 1.6; }
+  .nos-links { display: flex; gap: 10px; }
+  .nos-link { flex: 1; padding: 14px; border-radius: 12px; display: flex; align-items: center; gap: 10px; text-decoration: none; transition: opacity 0.2s; }
+  .nos-link:hover { opacity: 0.85; }
+  .nos-link-name { font-size: 13px; font-weight: 600; color: white; }
+  .nos-link-sub { font-size: 10.5px; color: rgba(255,255,255,0.45); }
+
+  /* MOBILE */
+  .mob-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 200; background: rgba(250,250,248,0.97); backdrop-filter: blur(20px); border-top: 1px solid var(--border); padding: 8px 8px 18px; }
+  .mob-nav-inner { display: flex; }
+  .mob-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 4px; border: none; background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; border-radius: 8px; transition: background 0.15s; }
+  .mob-btn:hover { background: var(--warm); }
+  .mob-btn.active { background: var(--warm); }
+  .mob-icon { font-size: 17px; }
+  .mob-label { font-size: 9px; font-weight: 500; color: var(--muted); }
+  .mob-btn.active .mob-label { color: var(--green); font-weight: 600; }
+
+  @media (max-width: 1000px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .hero-grid { grid-template-columns: 1fr; gap: 16px; }
+    .hero-img-wrap { display: none; }
+    .mob-nav { display: block; }
+    .page { padding-bottom: 80px; }
+    .news-grid { grid-template-columns: 1fr; }
+    .portals-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .layout { padding: 20px 16px 60px; }
+    .nav { padding: 0 16px; gap: 10px; }
+    .nav-tagline { display: none; }
+    .nav-sep { display: none; }
+    .nav-date { display: none; }
+    .cat-bar { padding: 0 16px; }
+    .hero-title { font-size: 24px; }
+    .nos-links { flex-direction: column; }
+  }
 `;
 
-// ─── COMPONENT ───────────────────────────────────────────────────────────────
-
 export default function Kind() {
-  const [tab, setTab] = useState("brief");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [section, setSection] = useState("feed");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [toneFilter, setToneFilter] = useState("all");
-  const [expanded, setExpanded] = useState(null);
   const [wellnessIdx, setWellnessIdx] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiText, setAiText] = useState("");
   const [visibleNews, setVisibleNews] = useState(ALL_NEWS);
-  const [extraPool, setExtraPool] = useState(EXTRA_NEWS_POOL);
+  const [extraPool, setExtraPool] = useState(EXTRA_NEWS);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [subPortals, setSubPortals] = useState([]);
   const [subTopics, setSubTopics] = useState([]);
   const [subSaved, setSubSaved] = useState(false);
-  const [showSub, setShowSub] = useState(false);
 
-  const today = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
   const dayOfWeek = new Date().getDay();
   const brief = BRIEF_VARIANTS[dayOfWeek];
-
-  // Pick 5 brief items mixing hard/positive (same daily variation)
-  const briefItems = [
-    BRIEF_ITEMS_POOL[(dayOfWeek) % BRIEF_ITEMS_POOL.length],
-    BRIEF_ITEMS_POOL[(dayOfWeek + 2) % BRIEF_ITEMS_POOL.length],
-    BRIEF_ITEMS_POOL[(dayOfWeek + 4) % BRIEF_ITEMS_POOL.length],
-    BRIEF_ITEMS_POOL[(dayOfWeek + 6) % BRIEF_ITEMS_POOL.length],
-    BRIEF_ITEMS_POOL[(dayOfWeek + 8) % BRIEF_ITEMS_POOL.length],
-  ];
+  const today = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+  const tip = WELLNESS_TIPS[wellnessIdx];
 
   useEffect(() => {
-    const t = setInterval(() => setWellnessIdx(i => (i + 1) % WELLNESS.length), 28000);
+    const t = setInterval(() => setWellnessIdx(i => (i + 1) % WELLNESS_TIPS.length), 20000);
     return () => clearInterval(t);
   }, []);
 
   const loadAI = useCallback(async () => {
-    setAiLoading(true);
-    setAiText("");
+    setAiLoading(true); setAiText("");
     try {
-      const headlines = ALL_NEWS.slice(0, 6).map(n =>
-        `[${n.tone === "hard" ? "DIFÍCIL" : "POSITIVA"}] ${n.title}`
-      ).join("\n");
+      const headlines = ALL_NEWS.slice(0, 6).map(n => `[${n.tone === "hard" ? "DIFÍCIL" : "POSITIVA"}] ${n.title}`).join("\n");
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: `Sos el editor de Kind, un portal de noticias que cubre todo —lo bueno y lo difícil— pero sin sensacionalismo ni angustia innecesaria. Tu voz es honesta, cercana e inteligente. No edulcorás la realidad, pero tampoco la dramatizás. Con estas noticias del día (marcadas como difíciles o positivas), escribí un párrafo editorial breve (3-4 oraciones) que conecte los temas con contexto real. Reconocé lo que está mal sin alarmar, y lo que avanza sin exagerar.\n\nNoticias:\n${headlines}\n\nPárrafo editorial:`
-          }]
+          messages: [{ role: "user", content: `Sos el editor de Kind, portal de noticias honesto y sin sensacionalismo. Voz cercana e inteligente. Con estas noticias del día, escribí un párrafo editorial breve (3-4 oraciones). Reconocé lo que está mal sin alarmar, y lo que avanza sin exagerar.\n\nNoticias:\n${headlines}\n\nPárrafo editorial:` }]
         })
       });
       const data = await res.json();
       setAiText(data.content?.map(b => b.text || "").join("") || "No se pudo generar el editorial.");
-    } catch {
-      setAiText("No se pudo cargar el editorial. Revisá tu conexión.");
-    }
+    } catch { setAiText("No se pudo cargar el editorial."); }
     setAiLoading(false);
   }, []);
 
-  useEffect(() => { if (tab === "feed") loadAI(); }, [tab, loadAI]);
+  useEffect(() => { loadAI(); }, []);
 
-  const handleLoadMore = () => {
-    if (extraPool.length === 0) return;
-    setLoadingMore(true);
-    setTimeout(() => {
-      const next = extraPool.slice(0, 3);
-      setVisibleNews(prev => [...prev, ...next]);
-      setExtraPool(prev => prev.slice(3));
-      setLoadingMore(false);
-    }, 800);
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, "_blank");
+    }
   };
 
-  const tip = WELLNESS[wellnessIdx];
+  const handleLoadMore = () => {
+    if (!extraPool.length) return;
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleNews(prev => [...prev, ...extraPool.slice(0, 3)]);
+      setExtraPool(prev => prev.slice(3));
+      setLoadingMore(false);
+    }, 700);
+  };
 
+  const goSection = (id) => { setSection(id); setMenuOpen(false); };
+  const featured = visibleNews.find(n => n.featured);
   const filtered = visibleNews.filter(n => {
-    if (toneFilter === "all") return true;
-    if (toneFilter === "positive") return n.tone === "positive";
-    if (toneFilter === "hard") return n.tone === "hard";
-    return true;
+    const catOk = activeCategory === "all" || n.topic === activeCategory;
+    const toneOk = toneFilter === "all" || n.tone === toneFilter;
+    return catOk && toneOk && !n.featured;
   });
 
-  const toneLabel = (tone) => tone === "positive" ? "✦ Positiva" : "● Importante";
-  const toneClass = (tone) => tone === "positive" ? "tone-positive" : "tone-hard";
-
-  const togglePortal = (p) => setSubPortals(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
-  const toggleTopic = (t) => setSubTopics(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
-
-  const handleSaveSub = () => { setSubSaved(true); setShowSub(false); setTab("feed"); };
-
-  // ── SUSCRIPCION SCREEN ────────────────────────────────────────────────────
-  if (showSub) {
-    return (
-      <>
-        <style>{css}</style>
-        <div className="app">
-          <div className="sub-screen fade-up">
-            <div className="sub-hero">
-              <button className="sub-back" onClick={() => setShowSub(false)}>← Volver</button>
-              <div className="sub-hero-label">Personalizá tu Kind</div>
-              <div className="sub-hero-title">Tu feed,<br /><em>a tu manera</em></div>
-              <div className="sub-hero-sub">Elegí las fuentes y temas que más te interesan. Kind los va a priorizar en tu feed, aunque el portal cubrirá todas las noticias relevantes del día.</div>
-            </div>
-
-            <div className="sub-note">
-              <span className="sub-note-icon">💡</span>
-              <span className="sub-note-text">Esto no es un filtro: Kind seguirá mostrando noticias importantes aunque no sean de tus temas. Lo que cambia es el énfasis y el orden.</span>
-            </div>
-
-            <div className="sub-section">
-              <div className="sub-section-title">Fuentes preferidas</div>
-              <div className="sub-section-sub">Seleccioná las que más leés o confiás.</div>
-              <div className="portals-grid">
-                {ALL_PORTALS.map(p => (
-                  <div key={p} className={`portal-card ${subPortals.includes(p) ? "selected" : ""}`} onClick={() => togglePortal(p)}>
-                    <span className="portal-name">{p}</span>
-                    <div className="portal-check">{subPortals.includes(p) ? "✓" : ""}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="sub-section" style={{ paddingTop: 20 }}>
-              <div className="sub-section-title">Temas de interés</div>
-              <div className="sub-section-sub">Estos temas aparecerán más seguido en tu feed.</div>
-              <div className="topics-grid">
-                {ALL_TOPICS.map(t => (
-                  <div key={t.id} className={`topic-pill ${subTopics.includes(t.id) ? "selected" : ""}`} onClick={() => toggleTopic(t.id)}>
-                    <span>{t.icon}</span><span>{t.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="sub-cta">
-              <button
-                className="sub-cta-btn"
-                disabled={subPortals.length === 0 && subTopics.length === 0}
-                onClick={handleSaveSub}
-              >
-                Guardar preferencias ✦
-              </button>
-            </div>
-          </div>
+  // ── SIDEBAR ──────────────────────────────────────────────────────────────
+  const Sidebar = () => (
+    <div className="sidebar">
+      <div className="wellness-card" style={{ background: tip.color }}>
+        <div className="wc-label"><div className="wc-dot" />Pausa Kind</div>
+        <span className="wc-icon">{tip.icon}</span>
+        <div className="wc-title">{tip.title}</div>
+        <div className="wc-msg">{tip.msg}</div>
+        <button className="wc-next" onClick={() => setWellnessIdx(i => (i + 1) % WELLNESS_TIPS.length)}>
+          Siguiente tip →
+        </button>
+        <div className="wc-dots">
+          {WELLNESS_TIPS.map((_, i) => (
+            <div key={i} className={`wc-dot-ind ${i === wellnessIdx ? "active" : ""}`} onClick={() => setWellnessIdx(i)} style={{ cursor: "pointer" }} />
+          ))}
         </div>
-      </>
-    );
-  }
+      </div>
 
-  // ── MAIN APP ──────────────────────────────────────────────────────────────
+      <div className="thought-card">
+        <div className="tc-label">Pensamiento del día</div>
+        <div className="tc-text">"{brief.closing}"</div>
+        <div className="tc-dash" />
+      </div>
+
+      <div className="ai-sidebar-card">
+        <div className="ai-label-row">
+          <div className="live-dot" />
+          Editorial del día
+          <span className="ai-badge">IA + editor</span>
+        </div>
+        {aiLoading
+          ? <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div className="spinner-sm" /><span style={{ fontSize: 12, color: "var(--muted)" }}>Preparando...</span></div>
+          : <p className="ai-text">{aiText}</p>
+        }
+        {!aiLoading && <button className="ai-refresh" onClick={loadAI}>↻ Regenerar</button>}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <style>{css}</style>
-      <div className="app">
 
-        <nav className="nav">
-          <div className="nav-top">
-            <div className="nav-logo">
-              <div className="logo-word">kind<span>.</span></div>
-              <div className="logo-tagline">Informate bien · Hacé el mundo mejor</div>
-            </div>
-            <div className="nav-actions">
-              <button className="nav-btn" onClick={() => setShowSub(true)} title="Personalizar">🎛️</button>
-              <button className="nav-btn">🔔</button>
-            </div>
+      {/* OVERLAY */}
+      <div className={`overlay ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(false)} />
+
+      {/* DRAWER */}
+      <div className={`drawer ${menuOpen ? "open" : ""}`}>
+        <div className="drawer-head">
+          <div className="drawer-logo">kind<span>.</span></div>
+          <button className="drawer-x" onClick={() => setMenuOpen(false)}>✕</button>
+        </div>
+        <div className="drawer-lbl">Secciones</div>
+        <div className="drawer-nav">
+          {SECTIONS.map(s => (
+            <button key={s.id} className={`dnav-btn ${section === s.id ? "active" : ""}`} onClick={() => goSection(s.id)}>
+              <span className="dnav-icon">{s.icon}</span>
+              <div className="dnav-info">
+                <div className="dnav-label">{s.label}</div>
+                <div className="dnav-desc">{s.desc}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+        <div className="drawer-div" />
+        <div className="drawer-lbl">Hoy en Kind</div>
+        <div style={{ padding: "0 20px 20px" }}>
+          <div style={{ fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.6, fontWeight: 300 }}>
+            {today} · {visibleNews.length} noticias disponibles
           </div>
-          <div className="nav-tabs">
-            {[["brief","☀️ Brief"],["feed","📰 Feed"],["social","📱 Redes"],["about","✦ Nosotros"]].map(([id, label]) => (
-              <button key={id} className={`nav-tab ${tab === id ? "active" : ""}`} onClick={() => setTab(id)}>{label}</button>
-            ))}
-          </div>
-        </nav>
+        </div>
+      </div>
 
-        <div className="content">
+      {/* NAV */}
+      <nav className="nav">
+        <button className={`nav-burger ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(v => !v)}>
+          <div className="hline" /><div className="hline" /><div className="hline" />
+        </button>
+        <div className="nav-logo" onClick={() => goSection("feed")}>kind<span>.</span></div>
+        <div className="nav-sep" />
+        <div className="nav-tagline">Informate bien · Hacé el mundo mejor</div>
+        <div className="nav-search">
+          <span className="nav-search-icon">🔍</span>
+          <input type="text" placeholder="Buscar en Google..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleSearch} />
+        </div>
+        <div className="nav-date">{today}</div>
+      </nav>
 
-          {/* BRIEF */}
-          {tab === "brief" && (
-            <div className="fade-up">
-              <div className="brief-hero">
-                <div className="brief-meta">
-                  <div className="brief-dot" />
-                  <span className="brief-date">{today}</span>
-                  <span className="brief-edition">Brief Matutino</span>
-                </div>
-                <div className="brief-title">"{brief.headline}"</div>
-                <div className="brief-intro">{brief.intro}</div>
-              </div>
+      {/* CAT BAR — solo en feed */}
+      {section === "feed" && (
+        <div className="cat-bar">
+          {CATEGORIES.map(cat => (
+            <button key={cat.id} className={`cat-btn ${activeCategory === cat.id ? "active" : ""}`} onClick={() => setActiveCategory(cat.id)}>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-              <div className="brief-items">
-                {briefItems.map((item, i) => (
-                  <div key={i} className="brief-item" style={{ animationDelay: `${i * 0.1}s` }}>
-                    <div className={`brief-item-icon ${item.hard ? "hard" : "normal"}`}>{item.icon}</div>
-                    <div>
-                      <div className={`brief-item-tag ${item.hard ? "hard" : "normal"}`}>{item.tag}</div>
-                      <div className="brief-item-text">{item.text}</div>
+      <div className="page">
+        <div className="layout">
+
+          {/* MAIN */}
+          <div className="main">
+
+            {/* ── FEED ── */}
+            {section === "feed" && (
+              <div className="screen">
+                {featured && (activeCategory === "all" || activeCategory === featured.topic) && (
+                  <div className="hero">
+                    <div className="hero-eyebrow">
+                      <div className="live-row"><div className="live-dot" />Más leído</div>
+                      <div className={`topic-badge ${featured.tone}`}>{featured.topic}</div>
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="brief-closing">
-                <span className="brief-closing-icon">✦</span>
-                <span className="brief-closing-text">{brief.closing}</span>
-              </div>
-
-              <div style={{ padding: "0 20px 80px" }}>
-                <div className="wellness-strip" onClick={() => setWellnessIdx(i => (i + 1) % WELLNESS.length)}>
-                  <div className="wellness-icon">{tip.icon}</div>
-                  <div>
-                    <div className="wellness-label">Pausa Kind · {tip.title}</div>
-                    <div className="wellness-msg">{tip.msg}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* FEED */}
-          {tab === "feed" && (
-            <div className="fade-up">
-              {subSaved && (subPortals.length > 0 || subTopics.length > 0) && (
-                <div style={{ margin: "16px 20px 0", background: "var(--kind-green-pale)", borderRadius: "var(--radius)", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>✦</span>
-                    <span style={{ fontSize: 12.5, fontWeight: 500, color: "var(--kind-green)" }}>
-                      Feed personalizado activo
-                    </span>
-                  </div>
-                  <button onClick={() => setShowSub(true)} style={{ background: "none", border: "none", fontSize: 11.5, color: "var(--kind-green)", fontWeight: 600, cursor: "pointer", fontFamily: "Outfit, sans-serif" }}>Editar →</button>
-                </div>
-              )}
-
-              <div style={{ padding: "16px 20px 0" }}>
-                <div className="wellness-strip" onClick={() => setWellnessIdx(i => (i + 1) % WELLNESS.length)}>
-                  <div className="wellness-icon">{tip.icon}</div>
-                  <div>
-                    <div className="wellness-label">Pausa Kind · {tip.title}</div>
-                    <div className="wellness-msg">{tip.msg}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ai-card">
-                <div className="ai-label">
-                  <div className="brief-dot" />
-                  <span className="ai-label-text">Editorial del día</span>
-                  <span className="ai-label-badge">IA + editor</span>
-                </div>
-                {aiLoading
-                  ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div className="spinner" />
-                      <span style={{ fontSize: 13, color: "var(--muted)" }}>Preparando el editorial...</span>
+                    <div className="hero-grid">
+                      <div>
+                        <h1 className="hero-title">{featured.title}</h1>
+                        <p className="hero-summary">{featured.summary}</p>
+                        <div className="hero-foot">
+                          <span className="hero-portal">{featured.portal}</span>
+                          <span className="hero-time">Hace {featured.time} · {featured.read} min</span>
+                          <a className="hero-link" href={featured.url} target="_blank" rel="noopener noreferrer">Leer nota ↗</a>
+                        </div>
+                      </div>
+                      <div className="hero-img-wrap">
+                        <img src={featured.photo} alt={featured.title} />
+                      </div>
                     </div>
-                  : <p className="ai-text">{aiText}</p>
-                }
-                {!aiLoading && (
-                  <div className="ai-refresh" onClick={loadAI}>
-                    <span style={{ fontSize: 13 }}>↻</span>
-                    <span className="ai-refresh-text">Regenerar</span>
                   </div>
                 )}
-              </div>
 
-              <div className="filter-row">
-                {[["all","Todas"],["positive","✦ Positivas"],["hard","● Importantes"]].map(([val, label]) => (
-                  <button key={val} className={`filter-chip ${toneFilter === val ? "active" : ""}`} onClick={() => setToneFilter(val)}>{label}</button>
-                ))}
-              </div>
-
-              <div className="feed-section-label">{filtered.length} noticias</div>
-
-              {filtered.map((n, i) => (
-                <div
-                  key={n.id}
-                  className={`news-card ${n.tone === "hard" ? "hard-card" : ""}`}
-                  style={{ animationDelay: `${i * 0.05}s` }}
-                  onClick={() => setExpanded(expanded === n.id ? null : n.id)}
-                >
-                  {n.photo && (
-                    <div className="news-card-photo">
-                      <img src={n.photo} alt={n.title} loading="lazy" onError={e => { e.target.style.display = "none"; }} />
-                      <div className={`photo-tone-bar ${n.tone}`} />
-                    </div>
-                  )}
-                  <div className="news-card-top">
-                    <span className="news-source">{n.portal}</span>
-                    <span className={`tone-pill ${toneClass(n.tone)}`}>{toneLabel(n.tone)}</span>
-                  </div>
-                  <div className="news-body">
-                    <div className={`news-thumb ${n.tone === "hard" ? "hard-thumb" : ""}`}>
-                      {n.photo
-                        ? <img src={n.photo} alt="" onError={e => { e.target.style.display="none"; }} />
-                        : n.img
-                      }
-                    </div>
-                    <div>
-                      <div className={`news-topic ${n.tone === "hard" ? "hard" : "positive"}`}>{n.topic}</div>
-                      <div className="news-title">{n.title}</div>
-                      {expanded === n.id && <div className="news-summary">{n.summary}</div>}
-                    </div>
-                  </div>
-                  <div className="news-footer">
-                    <span className="news-time">Hace {n.time}</span>
-                    <span className="news-read">{n.read} min</span>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span className="news-expand">{expanded === n.id ? "Cerrar ↑" : "Ver más ↓"}</span>
-                      <a
-                        href={n.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="news-link"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        Leer nota ↗
-                      </a>
-                    </div>
+                <div className="sec-head">
+                  <div className="sec-title">{activeCategory === "all" ? "Últimas noticias" : activeCategory}</div>
+                  <div className="sec-right">
+                    <span className="sec-count">{filtered.length} noticias</span>
+                    {[["all","Todas"],["positive","✦ Positivas"],["hard","● Importantes"]].map(([val, label]) => (
+                      <button key={val} className={`fchip ${toneFilter === val ? "active" : ""}`} onClick={() => setToneFilter(val)}>{label}</button>
+                    ))}
                   </div>
                 </div>
-              ))}
 
-              {/* Load more */}
-              <div className="load-more-trigger">
-                {loadingMore
-                  ? <div className="load-more-spinner"><div className="spinner" /><span>Cargando más noticias...</span></div>
-                  : extraPool.length > 0
-                    ? <button className="load-more-btn" onClick={handleLoadMore}>Cargar 3 noticias más ↓</button>
-                    : <span style={{ fontSize: 12, color: "var(--faint)" }}>Ya viste todas las noticias del día</span>
+                <div className="news-grid">
+                  {filtered.map((n, i) => (
+                    <a key={n.id} className="ncard" style={{ animationDelay: `${i * 0.05}s` }} href={n.url} target="_blank" rel="noopener noreferrer" onClick={e => e.preventDefault()}>
+                      <div className="ncard-img"><img src={n.photo} alt={n.title} loading="lazy" /></div>
+                      <div className={`ncard-topic ${n.tone}`}>{n.topic}</div>
+                      <div className="ncard-title">{n.title}</div>
+                      <div className="ncard-foot">
+                        <div className="ncard-meta"><b>{n.portal}</b><span>· {n.time}</span></div>
+                        <a href={n.url} target="_blank" rel="noopener noreferrer" className="ncard-link" onClick={e => e.stopPropagation()}>Leer ↗</a>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+
+                <div className="load-wrap">
+                  {loadingMore
+                    ? <div className="loading-row"><div className="spinner-sm" />Cargando más noticias...</div>
+                    : extraPool.length > 0
+                      ? <button className="load-btn" onClick={handleLoadMore}>Cargar más noticias ↓</button>
+                      : <span style={{ fontSize: 12, color: "var(--muted)" }}>Ya viste todas las noticias del día</span>
+                  }
+                </div>
+              </div>
+            )}
+
+            {/* ── BRIEF ── */}
+            {section === "brief" && (
+              <div className="screen">
+                <div className="brief-hero-panel">
+                  <div className="bh-label"><div className="live-dot" />Brief Matutino · {today}</div>
+                  <div className="bh-title">"{brief.headline}"</div>
+                  <div className="bh-intro">{brief.intro}</div>
+                </div>
+                <div className="brief-items">
+                  {BRIEF_ITEMS.map((item, i) => (
+                    <div key={i} className="brief-item">
+                      <div className={`bi-icon ${item.hard ? "hard" : "normal"}`}>{item.icon}</div>
+                      <div>
+                        <div className={`bi-tag ${item.hard ? "hard" : "normal"}`}>{item.tag}</div>
+                        <div className="bi-text">{item.text}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="brief-closing">
+                  <div className="bc-text">"{brief.closing}"</div>
+                </div>
+              </div>
+            )}
+
+            {/* ── INTERESES ── */}
+            {section === "intereses" && (
+              <div className="screen">
+                <div className="intereses-intro">
+                  <div className="int-title">Tus intereses</div>
+                  <div className="int-sub">Elegí tus fuentes y temas favoritos. Kind los va a priorizar en tu feed, aunque el portal seguirá cubriendo todas las noticias relevantes.</div>
+                  <div className="int-note">💡 Esto no es un filtro: Kind sigue mostrando noticias importantes aunque no sean de tus temas. Lo que cambia es el énfasis y el orden.</div>
+                </div>
+
+                <div className="int-section-title">Fuentes preferidas</div>
+                <div className="portals-grid">
+                  {ALL_PORTALS.map(p => (
+                    <div key={p} className={`portal-pill ${subPortals.includes(p) ? "selected" : ""}`} onClick={() => setSubPortals(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}>
+                      <span className="portal-name">{p}</span>
+                      <div className="portal-check">{subPortals.includes(p) ? "✓" : ""}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="int-section-title">Temas de interés</div>
+                <div className="topics-row">
+                  {CATEGORIES.filter(c => c.id !== "all").map(t => (
+                    <div key={t.id} className={`topic-tag ${subTopics.includes(t.id) ? "selected" : ""}`} onClick={() => setSubTopics(prev => prev.includes(t.id) ? prev.filter(x => x !== t.id) : [...prev, t.id])}>
+                      {t.label}
+                    </div>
+                  ))}
+                </div>
+
+                {subSaved
+                  ? <div className="saved-badge">✓ Preferencias guardadas — tu feed refleja tus intereses</div>
+                  : <button className="save-btn" disabled={subPortals.length === 0 && subTopics.length === 0} onClick={() => setSubSaved(true)}>
+                      Guardar preferencias ✦
+                    </button>
                 }
               </div>
-              <div style={{ height: 80 }} />
-            </div>
-          )}
+            )}
 
-          {/* SOCIAL */}
-          {tab === "social" && (
-            <div className="fade-up">
-              <div className="social-intro">
-                <div className="social-intro-title">Kind en las redes</div>
-                <div className="social-intro-sub">La misma voz en todos lados: honesta, cercana, sin alarmismo ni optimismo de fantasía.</div>
-              </div>
-              <div className="social-cards">
+            {/* ── REDES ── */}
+            {section === "redes" && (
+              <div className="screen">
+                <div className="redes-intro">Kind en las redes</div>
+                <div className="redes-sub">La misma voz en todos lados: honesta, cercana, sin alarmismo ni optimismo de fantasía.</div>
+
                 <div className="social-card">
-                  <div className="social-card-label"><div className="social-platform-dot" style={{ background: "#E1306C" }} />Instagram Story · Noticia importante</div>
-                  <div className="social-preview" style={{ background: "linear-gradient(160deg, #2e1a1a 0%, #4a2d2d 50%, #3a1a1a 100%)", minHeight: 220 }}>
-                    <div className="social-kind-logo" style={{ color: "#E88E8E" }}>kind.</div>
-                    <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#E88E8E", marginBottom: 8, opacity: 0.8 }}>Lo que hay que saber hoy</div>
-                    <div className="social-body" style={{ color: "white", fontSize: 18 }}>40.000 desplazados en Brasil por inundaciones. Es el tercer evento extremo del año en la región.</div>
-                    <div className="social-tag" style={{ color: "rgba(255,255,255,0.45)" }}>kindnews.com · Más contexto en el link</div>
+                  <div className="sc-label"><div className="sc-dot" style={{ background: "#E1306C" }} />Instagram Story · Noticia importante</div>
+                  <div className="sc-preview" style={{ background: "linear-gradient(160deg, #2e1a1a 0%, #4a2d2d 100%)", minHeight: 180 }}>
+                    <div className="sc-kind" style={{ color: "#E88E8E" }}>kind.</div>
+                    <div className="sc-body" style={{ color: "white", fontSize: 17 }}>40.000 desplazados en Brasil por inundaciones. Es el tercer evento extremo del año.</div>
+                    <div className="sc-tag" style={{ color: "rgba(255,255,255,0.45)" }}>kindnews.news · Más contexto en el link</div>
                   </div>
                 </div>
+
                 <div className="social-card">
-                  <div className="social-card-label"><div className="social-platform-dot" style={{ background: "#833AB4" }} />Instagram Post · Brief matutino</div>
-                  <div className="social-preview" style={{ background: "linear-gradient(135deg, #0f1a2e 0%, #1a2e4a 100%)", minHeight: 210 }}>
-                    <div className="social-kind-logo" style={{ color: "#6BB5E8" }}>kind.</div>
-                    <div style={{ marginBottom: 8 }}><span style={{ background: "rgba(107,181,232,0.15)", color: "#6BB5E8", fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100, letterSpacing: "0.1em", textTransform: "uppercase" }}>Brief Matutino ✦</span></div>
-                    <div className="social-body" style={{ color: "white", fontSize: 17 }}>Hoy hay crisis, avances y todo lo que está en el medio. Te lo contamos sin drama.</div>
-                    <div style={{ display: "flex", gap: 7, marginBottom: 12, flexWrap: "wrap" }}>
-                      {[["🌊","Crisis"],["🧬","Ciencia"],["☀️","Ambiente"],["📚","Cultura"]].map(([ic, t]) => (
-                        <span key={t} style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.07)", padding: "3px 8px", borderRadius: 6 }}>{ic} {t}</span>
-                      ))}
-                    </div>
-                    <div className="social-tag" style={{ color: "rgba(255,255,255,0.35)" }}>kindnews.com</div>
+                  <div className="sc-label"><div className="sc-dot" style={{ background: "#833AB4" }} />Instagram Post · Brief matutino</div>
+                  <div className="sc-preview" style={{ background: "linear-gradient(135deg, #0f1a2e 0%, #1a2e4a 100%)", minHeight: 180 }}>
+                    <div className="sc-kind" style={{ color: "#6BB5E8" }}>kind.</div>
+                    <div className="sc-body" style={{ color: "white", fontSize: 17 }}>Hoy hay crisis, avances y todo lo que está en el medio. Te lo contamos sin drama.</div>
+                    <div className="sc-tag" style={{ color: "rgba(255,255,255,0.35)" }}>kindnews.news</div>
                   </div>
                 </div>
+
                 <div className="social-card">
-                  <div className="social-card-label"><div className="social-platform-dot" style={{ background: "#1DA1F2" }} />Post en X</div>
-                  <div className="x-post-preview">
-                    <div className="x-header">
-                      <div className="x-avatar">K</div>
+                  <div className="sc-label"><div className="sc-dot" style={{ background: "#1DA1F2" }} />Post en X</div>
+                  <div className="x-preview">
+                    <div className="x-head">
+                      <div className="x-av">K</div>
                       <div><div className="x-name">Kind News</div><div className="x-handle">@kindnews</div></div>
                     </div>
                     <div className="x-body">España genera el 58% de su energía con renovables. Con tres años de anticipación. Mientras tanto, Brasil enfrenta su tercer evento climático extremo del año. Las dos cosas son reales. 🌍</div>
                     <div className="x-tag">#Kind #Ambiente #Clima</div>
-                    <div className="x-actions">
-                      <span className="x-action">💬 38</span>
-                      <span className="x-action">🔁 240</span>
-                      <span className="x-action">❤️ 1.8K</span>
-                      <span className="x-action">📊 22K</span>
+                    <div className="x-acts">
+                      <span className="x-act">💬 38</span><span className="x-act">🔁 240</span><span className="x-act">❤️ 1.8K</span><span className="x-act">📊 22K</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div style={{ height: 80 }} />
-            </div>
-          )}
+            )}
 
-          {/* ABOUT */}
-          {tab === "about" && (
-            <div className="fade-up">
-              <div className="about-hero">
-                <div className="about-label">Quiénes somos</div>
-                <div className="about-title">Noticias <em>reales</em>,<br />sin el loop de angustia</div>
-                <div className="about-sub">Kind no filtra las malas noticias. Cubre todo lo importante, pero sin el sensacionalismo que te deja agotado. Hay una diferencia entre informar y asustar.</div>
-              </div>
-              <div className="about-body">
-                <div className="about-card">
-                  <div className="about-card-icon">☀️</div>
-                  <div className="about-card-title">Brief matutino honesto</div>
-                  <div className="about-card-text">Cada mañana, lo más importante del día. Lo bueno y lo difícil, con contexto. Sin titular alarmista, sin omitir lo que incomoda.</div>
+            {/* ── NOSOTROS ── */}
+            {section === "nosotros" && (
+              <div className="screen">
+                <div className="nos-hero">
+                  <div className="nh-label">Quiénes somos</div>
+                  <div className="nh-title">Noticias <em>reales</em>,<br />sin el loop de angustia</div>
+                  <div className="nh-sub">Kind no filtra las malas noticias. Cubre todo lo importante, pero sin el sensacionalismo que te deja agotado. Hay una diferencia entre informar y asustar.</div>
                 </div>
-                <div className="about-card">
-                  <div className="about-card-icon">📰</div>
-                  <div className="about-card-title">Feed con balance real</div>
-                  <div className="about-card-text">Las noticias difíciles están, etiquetadas y con contexto. Las positivas también, sin exagerarlas. El lector elige cómo y cuánto consumir.</div>
+                <div className="nos-cards">
+                  {[
+                    { icon: "☀️", title: "Brief matutino honesto", text: "Cada mañana, lo más importante del día. Lo bueno y lo difícil, con contexto. Sin titular alarmista, sin omitir lo que incomoda." },
+                    { icon: "📰", title: "Feed con balance real", text: "Las noticias difíciles están, etiquetadas y con contexto. Las positivas también, sin exagerarlas. El lector elige cómo y cuánto consumir." },
+                    { icon: "🤖", title: "IA con criterio editorial", text: "Usamos IA para sintetizar y contextualizar, con una voz definida: ni catastrofista ni naïf. Siempre con supervisión humana." },
+                    { icon: "🌿", title: "Pausas de bienestar", text: "Leer noticias puede ser intenso. Kind incluye recordatorios para que cuides tu cabeza y tu cuerpo mientras te informás." },
+                  ].map((c, i) => (
+                    <div key={i} className="nos-card">
+                      <span className="nos-icon">{c.icon}</span>
+                      <div>
+                        <div className="nos-ctitle">{c.title}</div>
+                        <div className="nos-ctext">{c.text}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="about-card">
-                  <div className="about-card-icon">🎛️</div>
-                  <div className="about-card-title">Feed personalizable</div>
-                  <div className="about-card-text">Podés indicar tus fuentes y temas favoritos para que Kind los priorice. No es un filtro: el portal sigue cubriendo todo, pero con énfasis en lo que te importa.</div>
+                <div className="nos-manif">
+                  <div className="nos-manif-title">"Informate bien.<br />Hacé el mundo mejor."</div>
+                  <div className="nos-manif-sub">No creemos que ignorar los problemas ayude. Creemos que entenderlos bien, sin drama, es lo que permite actuar.</div>
                 </div>
-                <div className="about-card">
-                  <div className="about-card-icon">🤖</div>
-                  <div className="about-card-title">IA con criterio editorial</div>
-                  <div className="about-card-text">Usamos IA para sintetizar y contextualizar, con una voz definida: ni catastrofista ni naïf. Siempre con supervisión humana.</div>
-                </div>
-                <div className="about-card">
-                  <div className="about-card-icon">🌿</div>
-                  <div className="about-card-title">Pausas de bienestar</div>
-                  <div className="about-card-text">Leer noticias puede ser intenso. Kind incluye recordatorios para que cuides tu cabeza y tu cuerpo mientras te informás.</div>
-                </div>
-                <div className="about-manifesto">
-                  <div className="about-manifesto-title">"Informate bien.<br />Hacé el mundo mejor."</div>
-                  <div className="about-manifesto-sub">No creemos que ignorar los problemas ayude. Creemos que entenderlos bien, sin drama, es lo que permite actuar.</div>
-                </div>
-              </div>
-              <div className="about-links">
-                <div className="about-link" style={{ background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)" }}>
-                  <span style={{ fontSize: 18 }}>📸</span>
-                  <div><div className="about-link-name">Instagram</div><div className="about-link-sub">@kindnews</div></div>
-                </div>
-                <div className="about-link" style={{ background: "#0a0a0a" }}>
-                  <span style={{ fontSize: 18 }}>𝕏</span>
-                  <div><div className="about-link-name">X / Twitter</div><div className="about-link-sub">@kindnews</div></div>
+                <div className="nos-links">
+                  <a className="nos-link" href="https://instagram.com/kindnews" target="_blank" rel="noopener noreferrer" style={{ background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)" }}>
+                    <span style={{ fontSize: 18 }}>📸</span>
+                    <div><div className="nos-link-name">Instagram</div><div className="nos-link-sub">@kindnews</div></div>
+                  </a>
+                  <a className="nos-link" href="https://x.com/kindnews" target="_blank" rel="noopener noreferrer" style={{ background: "#0a0a0a" }}>
+                    <span style={{ fontSize: 18 }}>𝕏</span>
+                    <div><div className="nos-link-name">X / Twitter</div><div className="nos-link-sub">@kindnews</div></div>
+                  </a>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* SIDEBAR */}
+          <Sidebar />
         </div>
 
-        <div className="bottom-bar">
-          {[["brief","☀️","Brief"],["feed","📰","Feed"],["social","📱","Redes"],["about","✦","Nosotros"]].map(([id, icon, label]) => (
-            <button key={id} className={`bottom-btn ${tab === id ? "active" : ""}`} onClick={() => setTab(id)}>
-              <span className="bottom-btn-icon">{icon}</span>
-              <span className="bottom-btn-label">{label}</span>
-            </button>
-          ))}
-          <button className={`bottom-btn ${showSub ? "active" : ""}`} onClick={() => setShowSub(true)}>
-            <span className="bottom-btn-icon">🎛️</span>
-            <span className="bottom-btn-label">Mi Feed</span>
-            {subSaved && <div className="sub-indicator" />}
-          </button>
+        {/* MOBILE NAV */}
+        <div className="mob-nav">
+          <div className="mob-nav-inner">
+            {[["feed","📰","Feed"],["brief","☀️","Brief"],["intereses","🎛️","Intereses"],["redes","📱","Redes"],["nosotros","✦","Kind"]].map(([id, icon, label]) => (
+              <button key={id} className={`mob-btn ${section === id ? "active" : ""}`} onClick={() => goSection(id)}>
+                <span className="mob-icon">{icon}</span>
+                <span className="mob-label">{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </>
