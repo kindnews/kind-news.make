@@ -413,7 +413,7 @@ export default function Kind() {
     setAiLoading(false);
   }, []);
 
-  useEffect(() => { loadAI(); }, []);
+  useEffect(() => { loadAI(); }, [loadAI]);
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchQuery.trim()) {
