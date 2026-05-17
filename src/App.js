@@ -248,7 +248,15 @@ const css = `
   .ncard-link { font-size: 10.5px; font-weight: 600; color: var(--green); text-decoration: none; padding: 3px 9px; border-radius: 100px; background: var(--green-pale); transition: background 0.15s; white-space: nowrap; }
   .ncard-link:hover { background: #d4eddc; }
 
-  .load-wrap { text-align: center; padding: 24px 0 0; }
+  .loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 16px; }
+  .loading-logo { font-family: 'Lora', serif; font-size: 32px; font-weight: 700; color: var(--ink); }
+  .loading-logo span { color: var(--green); }
+  .loading-msg { font-size: 13px; color: var(--muted); }
+  .loading-bar { width: 120px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .loading-bar-fill { height: 100%; background: var(--green); border-radius: 2px; animation: loadBar 1.5s ease-in-out infinite; }
+  @keyframes loadBar { 0%{width:0%} 50%{width:100%} 100%{width:0%;margin-left:100%} }
+  .live-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--green-pale); color: var(--green); font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 100px; letter-spacing: 0.06em; margin-left: 8px; }
+
   .load-btn { padding: 10px 28px; border-radius: 100px; border: 1px solid var(--border); background: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-3); cursor: pointer; transition: all 0.18s; box-shadow: 0 1px 8px rgba(0,0,0,0.05); }
   .load-btn:hover { border-color: var(--green); color: var(--green); }
   .loading-row { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--muted); }
@@ -368,6 +376,8 @@ const css = `
   }
 `;
 
+const BACKEND_URL = "https://kind-backend-production-80b8.up.railway.app";
+
 export default function Kind() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [section, setSection] = useState("feed");
@@ -383,11 +393,41 @@ export default function Kind() {
   const [subPortals, setSubPortals] = useState([]);
   const [subTopics, setSubTopics] = useState([]);
   const [subSaved, setSubSaved] = useState(false);
+  const [briefData, setBriefData] = useState(null);
+  const [backendOk, setBackendOk] = useState(false);
+  const [cargando, setCargando] = useState(true);
 
   const dayOfWeek = new Date().getDay();
-  const brief = BRIEF_VARIANTS[dayOfWeek];
+  const briefFallback = BRIEF_VARIANTS[dayOfWeek];
+  const brief = briefData || briefFallback;
   const today = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
   const tip = WELLNESS_TIPS[wellnessIdx];
+
+  // ── FETCH BACKEND ─────────────────────────────────────────────────────────
+  
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const cargarBackend = async () => {
+      setCargando(true);
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/todo`);
+        const data = await res.json();
+        if (data.noticias && data.noticias.length > 0) {
+          // Marcar la primera como featured
+          const noticias = data.noticias.map((n, i) => ({ ...n, featured: i === 0 }));
+          setVisibleNews(noticias);
+          setExtraPool([]);
+          setBackendOk(true);
+        }
+        if (data.brief) setBriefData(data.brief);
+        if (data.editorial) setAiText(data.editorial);
+      } catch (err) {
+        console.warn("Backend no disponible, usando datos locales:", err.message);
+      }
+      setCargando(false);
+    };
+    cargarBackend();
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setWellnessIdx(i => (i + 1) % WELLNESS_TIPS.length), 20000);
@@ -395,9 +435,18 @@ export default function Kind() {
   }, []);
 
   const loadAI = useCallback(async () => {
+    if (backendOk) {
+      // Si el backend está disponible, pedir el editorial de ahí
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/editorial`);
+        const data = await res.json();
+        if (data.editorial) { setAiText(data.editorial); return; }
+      } catch {}
+    }
+    // Fallback: generar con Claude directamente
     setAiLoading(true); setAiText("");
     try {
-      const headlines = ALL_NEWS.slice(0, 6).map(n => `[${n.tone === "hard" ? "DIFÍCIL" : "POSITIVA"}] ${n.title}`).join("\n");
+      const headlines = visibleNews.slice(0, 6).map(n => `[${n.tone === "hard" ? "DIFÍCIL" : "POSITIVA"}] ${n.title}`).join("\n");
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -411,9 +460,10 @@ export default function Kind() {
       setAiText(data.content?.map(b => b.text || "").join("") || "No se pudo generar el editorial.");
     } catch { setAiText("No se pudo cargar el editorial."); }
     setAiLoading(false);
-  }, []);
+  }, [backendOk, visibleNews]);
 
-  useEffect(() => { loadAI(); }, [loadAI]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!cargando && !aiText) loadAI(); }, [cargando]);
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && searchQuery.trim()) {
@@ -482,6 +532,16 @@ export default function Kind() {
     <>
       <style>{css}</style>
 
+      {cargando && (
+        <div className="loading-screen">
+          <div className="loading-logo">kind<span>.</span></div>
+          <div className="loading-bar"><div className="loading-bar-fill" /></div>
+          <div className="loading-msg">Cargando noticias del día...</div>
+        </div>
+      )}
+
+      {!cargando && (<>
+
       {/* OVERLAY */}
       <div className={`overlay ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(false)} />
 
@@ -519,7 +579,10 @@ export default function Kind() {
         </button>
         <div className="nav-logo" onClick={() => goSection("feed")}>kind<span>.</span></div>
         <div className="nav-sep" />
-        <div className="nav-tagline">Informate bien · Hacé el mundo mejor</div>
+        <div className="nav-tagline">
+          Informate bien · Hacé el mundo mejor
+          {backendOk && <span className="live-badge"><span style={{width:5,height:5,borderRadius:"50%",background:"var(--green)",display:"inline-block",animation:"pulse 2s infinite"}} />En vivo</span>}
+        </div>
         <div className="nav-search">
           <span className="nav-search-icon">🔍</span>
           <input type="text" placeholder="Buscar en Google..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={handleSearch} />
@@ -766,6 +829,7 @@ export default function Kind() {
           </div>
         </div>
       </div>
+      </>)}
     </>
   );
 }
