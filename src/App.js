@@ -328,13 +328,7 @@ export default function KindBienestar() {
   const notasFiltradas = notas.filter(n => seccion === "todo" || n.seccion === seccion);
   const notasIAFiltradas = notasIA.filter(n => seccion === "todo" || n.seccion === seccion);
 
-  function secColor(sec) {
-    if (sec === "Salud")   return "var(--sage)";
-    if (sec === "Ciencia") return "var(--teal)";
-    if (sec === "Hábitos") return "var(--amber)";
-    if (sec === "Mente")   return "var(--lavender)";
-    return "var(--sage)";
-  }
+
 
   // ── SIDEBAR ────────────────────────────────────────────────────────────────
   const Sidebar = () => (
